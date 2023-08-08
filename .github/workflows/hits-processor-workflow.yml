@@ -29,6 +29,20 @@ jobs:
         with:
           useConfigFile: true
 
+  publish-bicep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build & Push
+        working-directory: infrastructure
+        run: |
+          az bicep build --file hits-processor.bicep
+      - name: Publish Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bicep-templates
+          path: infrastructure/*.json
+
   build:
     needs: [versionize]
     runs-on: ubuntu-latest
