@@ -41,6 +41,7 @@ jobs:
         working-directory: infrastructure
         run: |
           az bicep build --file hits-processor.bicep
+          bicep build-params hits-processor.params.bicepparam
       - name: Publish Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -89,4 +90,4 @@ jobs:
         id: arm
         uses: Azure/cli@v1
         with:
-          inlineScript: az deployment sub create --name tinylink-hits --location westeurope --template-file ./infrastructure/hits-processor.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
+          inlineScript: az deployment sub create --name tinylink-hits --location westeurope --template-file ./infrastructure/hits-processor.json --parameters ./infrastructure/hits-processor.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
