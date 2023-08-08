@@ -18,6 +18,9 @@ resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existin
   scope: resourceGroup(integrationResourceGroupName)
 }
 
+var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
+var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
+
 resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
   name: 'hitsProcessorJob'
   location: location
@@ -27,11 +30,11 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
       secrets: [
         {
           name: 'servicebus-connection-string'
-          value: serviceBus.listKeys().primaryConnectionString
+          value: serviceBusConnectionString
         }
         {
           name: 'container-registry-secret'
-          value: serviceBus.listKeys().primaryConnectionString
+          value: containerRegistry.listCredentials().passwords[0].value
         }
       ]
       replicaTimeout: 60
