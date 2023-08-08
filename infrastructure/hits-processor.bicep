@@ -1,6 +1,7 @@
 targetScope = 'subscription'
 
 param location string = deployment().location
+param containerVersion string
 
 var systemName = 'tinylnk-hits'
 var locationAbbreviation = 'we'

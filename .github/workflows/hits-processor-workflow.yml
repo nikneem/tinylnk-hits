@@ -63,3 +63,26 @@ jobs:
           docker build . --file Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:${{needs.versionize.outputs.semver}}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
+
+  infrastructure-incremental:
+    needs: [build, publish-bicep, versionize]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: bicep-templates
+          path: ./infrastructure
+      - name: Az CLI login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy Infrastructure
+        id: arm
+        uses: Azure/cli@v1
+        with:
+          inlineScript: az deployment sub create --name tinylink-hits --location westeurope --template-file ./infrastructure/hits-processor.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
