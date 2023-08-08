@@ -77,7 +77,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
           env: [
             {
               name: 'ServiceBusConnection'
-              value: serviceBus.listKeys().primaryConnectionString
+              secretRef: 'servicebus-connection-string'
             }
           ]
           resources: {
