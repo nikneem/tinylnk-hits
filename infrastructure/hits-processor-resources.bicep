@@ -57,7 +57,11 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
                   triggerParameter: 'connection'
                 }
               ]
-              metadata: any('{ "queueName": "hits", "namespace": "${serviceBus.name}", "messageCount": 5 }')
+              metadata: any({
+                queueName: 'hits'
+                namespace: serviceBus.name
+                messageCount: 5
+              })
             }
           ]
         }
