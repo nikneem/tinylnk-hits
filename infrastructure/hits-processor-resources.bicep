@@ -18,8 +18,8 @@ resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existin
   scope: resourceGroup(integrationResourceGroupName)
 }
 
-// var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
-// var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
+var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
+var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
 
 resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
   name: 'tinylnk-jobs-hits-processor'
@@ -30,7 +30,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
       secrets: [
         {
           name: 'servicebus-connection-string'
-          value: 'banaan'
+          value: serviceBusConnectionString
         }
         {
           name: 'container-registry-secret'
@@ -57,6 +57,11 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
                   triggerParameter: 'connection'
                 }
               ]
+              metadata: {
+                queueName: 'hits'
+                namespace: serviceBus.name
+                messageCount: 5
+              }
             }
           ]
         }
@@ -89,104 +94,3 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
     }
   }
 }
-
-//     template: {
-//       containers: [
-//         {
-//           image: 'pollstarintprodneuacr.azurecr.io/pollstar-votes-job:1.0.17'
-//           name: jobs_process_incoming_votes_name_param
-//           env: [
-//             {
-//               name: 'ServiceBusConnection'
-//               value: 'Endpoint=sb://pollstar-int-prod-neu-bus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=8/2hWDcGMiDrr8+FuRE5UZTO3a7Q9tBHm+tOGe1oZ6A='
-//             }
-//             {
-//               name: 'StorageAccountConnection'
-//               value: 'DefaultEndpointsProtocol=https;AccountName=mfd6x6jycr5pq;AccountKey=l40iDuzji/carbGNFrRGzf8Sr8kdEmA5GihWYN4reSB8boAnGUd+IhlaVA3FlkmyWuAqhwkqB7Zj+AStl4DMow==;EndpointSuffix=core.windows.net'
-//             }
-//           ]
-//           resources: {
-//             cpu: '0.5'
-//             memory: '1Gi'
-//           }
-//         }
-//       ]
-//     }
-
-// resource jobs_process_incoming_votes_name 'Microsoft.App/jobs@2023-04-01-preview' = {
-//   name: jobs_process_incoming_votes_name_param
-//   location: 'North Europe'
-//   identity: {
-//     type: 'None'
-//   }
-//   properties: {
-//     environmentId: managedEnvironments_pollstar_int_prod_neu_env_externalid
-//     configuration: {
-//       secrets: [
-//         {
-//           name: 'servicebus-connection-string'
-//         }
-//         {
-//           name: 'storage-account-connection-string'
-//         }
-//         {
-//           name: 'pollstarintprodneuacrazurecrio-pollstarintprodneuacr'
-//         }
-//       ]
-//       triggerType: 'Event'
-//       replicaTimeout: 60
-//       replicaRetryLimit: 1
-//       eventTriggerConfig: {
-//         replicaCompletionCount: 1
-//         parallelism: 1
-//         scale: {
-//           minExecutions: 0
-//           maxExecutions: 10
-//           pollingInterval: 30
-//           rules: [
-//             {
-//               name: 'azure-servicebus-queue-rule'
-//               type: 'azure-servicebus'
-//               metadata: {}
-//               auth: [
-//                 {
-//                   secretRef: 'servicebus-connection-string'
-//                   triggerParameter: 'connection'
-//                 }
-//               ]
-//             }
-//           ]
-//         }
-//       }
-//       registries: [
-//         {
-//           server: 'pollstarintprodneuacr.azurecr.io'
-//           username: 'pollstarintprodneuacr'
-//           passwordSecretRef: 'pollstarintprodneuacrazurecrio-pollstarintprodneuacr'
-//         }
-//       ]
-//     }
-//     template: {
-//       containers: [
-//         {
-//           image: 'pollstarintprodneuacr.azurecr.io/pollstar-votes-job:1.0.17'
-//           name: jobs_process_incoming_votes_name_param
-//           env: [
-//             {
-//               name: 'ServiceBusConnection'
-//               value: 'Endpoint=sb://pollstar-int-prod-neu-bus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=8/2hWDcGMiDrr8+FuRE5UZTO3a7Q9tBHm+tOGe1oZ6A='
-//             }
-//             {
-//               name: 'StorageAccountConnection'
-//               value: 'DefaultEndpointsProtocol=https;AccountName=mfd6x6jycr5pq;AccountKey=l40iDuzji/carbGNFrRGzf8Sr8kdEmA5GihWYN4reSB8boAnGUd+IhlaVA3FlkmyWuAqhwkqB7Zj+AStl4DMow==;EndpointSuffix=core.windows.net'
-//             }
-//           ]
-//           resources: {
-//             cpu: '0.5'
-//             memory: '1Gi'
-//           }
-//         }
-//       ]
-//     }
-//   }
-// }
