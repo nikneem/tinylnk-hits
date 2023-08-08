@@ -22,7 +22,7 @@ resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existin
 // var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
 
 resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
-  name: 'hitsProcessorJob'
+  name: 'tinylnk-jobs-hits-processor'
   location: location
   properties: {
     environmentId: containerAppEnvironment.id
