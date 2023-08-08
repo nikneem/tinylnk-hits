@@ -5,6 +5,8 @@ on:
     paths:
       - "jobs/HitsProcessor/**"
       - ".github/workflows/hits-processor-workflow.yml"
+      - "infrastructure/hits-processor.bicep"
+      - "infrastructure/hits-processor-resource.bicep"
 
 env:
   IMAGE_NAME: tinylnk-jobs-hitsprocessor
