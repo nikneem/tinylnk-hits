@@ -12,7 +12,6 @@ const string sourceQueueName = "hits";
 const string storageTableName = "hits";
 const string partitionKey = "hit";
 
-
 static async Task Main()
 {
     Console.WriteLine("Starting the hits processor job");
