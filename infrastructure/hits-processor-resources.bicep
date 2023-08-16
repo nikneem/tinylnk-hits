@@ -21,6 +21,21 @@ resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existin
 var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
 var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
 
+resource hitsStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: uniqueString(resourceGroup().name)
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  resource hitsTableStorageService 'tableServices' = {
+    name: 'default'
+    resource table 'tables' = {
+      name: 'hits'
+    }
+  }
+}
+
 resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
   name: 'tinylnk-jobs-hits-processor'
   location: location
@@ -51,17 +66,16 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
             {
               name: 'azure-servicebus-queue-rule'
               type: 'azure-servicebus'
+              metadata: any({
+                queueName: 'hits'
+                connection: 'servicebus-connection-string'
+              })
               auth: [
                 {
                   secretRef: 'servicebus-connection-string'
                   triggerParameter: 'connection'
                 }
               ]
-              metadata: any({
-                queueName: 'hits'
-                namespace: serviceBus.name
-                messageCount: 5
-              })
             }
           ]
         }
@@ -70,7 +84,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
         {
           server: containerRegistry.properties.loginServer
           username: containerRegistry.name
-          passwordSecretRef: containerRegistry.listCredentials().passwords[0].value
+          passwordSecretRef: 'container-registry-secret'
         }
       ]
     }
