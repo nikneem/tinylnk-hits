@@ -37,83 +37,83 @@ resource hitsStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-// resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
-//   name: 'tinylnk-jobs-hits-processor'
-//   location: location
-//   properties: {
-//     environmentId: containerAppEnvironment.id
-//     configuration: {
-//       secrets: [
-//         {
-//           name: 'servicebus-connection-string'
-//           value: serviceBusConnectionString
-//         }
-//         {
-//           name: 'storageaccount-connection-string'
-//           value: storageAccountConnectionString
-//         }
-//         {
-//           name: 'container-registry-secret'
-//           value: containerRegistry.listCredentials().passwords[0].value
-//         }
-//       ]
-//       replicaTimeout: 60
-//       replicaRetryLimit: 1
-//       triggerType: 'Event'
-//       eventTriggerConfig: {
-//         replicaCompletionCount: 1
-//         parallelism: 1
-//         scale: {
-//           minExecutions: 0
-//           maxExecutions: 10
-//           pollingInterval: 30
-//           rules: [
-//             {
-//               name: 'azure-servicebus-queue-rule'
-//               type: 'azure-servicebus'
-//               metadata: any({
-//                 queueName: 'hits'
-//                 connection: 'servicebus-connection-string'
-//               })
-//               auth: [
-//                 {
-//                   secretRef: 'servicebus-connection-string'
-//                   triggerParameter: 'connection'
-//                 }
-//               ]
-//             }
-//           ]
-//         }
-//       }
-//       registries: [
-//         {
-//           server: containerRegistry.properties.loginServer
-//           username: containerRegistry.name
-//           passwordSecretRef: 'container-registry-secret'
-//         }
-//       ]
-//     }
-//     template: {
-//       containers: [
-//         {
-//           image: '${containerRegistry.properties.loginServer}/hits-processor:${containerVersion}'
-//           name: 'hits-processor'
-//           env: [
-//             {
-//               name: 'ServiceBusConnection'
-//               secretRef: 'servicebus-connection-string'
-//             }
-//             {
-//               name: 'StorageAccountConnection'
-//               secretRef: 'storageaccount-connection-string'
-//             }
-//           ]
-//           resources: {
-//             cpu: json('0.25')
-//             memory: '0.5Gi'
-//           }
-//         }
-//       ]
-//     }
-//   }
-// }
+resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
+  name: 'tinylnk-jobs-hits-processor'
+  location: location
+  properties: {
+    environmentId: containerAppEnvironment.id
+    configuration: {
+      secrets: [
+        {
+          name: 'servicebus-connection-string'
+          value: serviceBusConnectionString
+        }
+        {
+          name: 'storageaccount-connection-string'
+          value: storageAccountConnectionString
+        }
+        {
+          name: 'container-registry-secret'
+          value: containerRegistry.listCredentials().passwords[0].value
+        }
+      ]
+      replicaTimeout: 60
+      replicaRetryLimit: 1
+      triggerType: 'Event'
+      eventTriggerConfig: {
+        replicaCompletionCount: 1
+        parallelism: 1
+        scale: {
+          minExecutions: 0
+          maxExecutions: 10
+          pollingInterval: 30
+          rules: [
+            {
+              name: 'azure-servicebus-queue-rule'
+              type: 'azure-servicebus'
+              metadata: any({
+                queueName: 'hits'
+                connection: 'servicebus-connection-string'
+              })
+              auth: [
+                {
+                  secretRef: 'servicebus-connection-string'
+                  triggerParameter: 'connection'
+                }
+              ]
+            }
+          ]
+        }
+      }
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          username: containerRegistry.name
+          passwordSecretRef: 'container-registry-secret'
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          image: '${containerRegistry.properties.loginServer}/hits-processor:${containerVersion}'
+          name: 'hits-processor'
+          env: [
+            {
+              name: 'ServiceBusConnection'
+              secretRef: 'servicebus-connection-string'
+            }
+            {
+              name: 'StorageAccountConnection'
+              secretRef: 'storageaccount-connection-string'
+            }
+          ]
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+        }
+      ]
+    }
+  }
+}
