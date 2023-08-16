@@ -8,7 +8,7 @@ param serviceBusName string
 param location string = deployment().location
 
 var systemName = 'tinylnk-hits'
-var locationAbbreviation = 'we'
+var locationAbbreviation = 'ne'
 
 var resourceGroupName = '${systemName}-${locationAbbreviation}'
 

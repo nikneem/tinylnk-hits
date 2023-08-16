@@ -92,4 +92,4 @@ jobs:
         id: arm
         uses: Azure/cli@v1
         with:
-          inlineScript: az deployment sub create --name tinylink-hits --location westeurope --template-file ./infrastructure/hits-processor.json --parameters ./infrastructure/hits-processor.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
+          inlineScript: az deployment sub create --name tinylink-hits --location northeurope --template-file ./infrastructure/hits-processor.json --parameters ./infrastructure/hits-processor.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
