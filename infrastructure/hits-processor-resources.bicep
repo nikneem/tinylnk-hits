@@ -20,6 +20,7 @@ resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existin
 
 var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
 var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
+var storageAccountConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${hitsStorageAccount.name};AccountKey=${hitsStorageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
 
 resource hitsStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: uniqueString(resourceGroup().name)
@@ -46,6 +47,10 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
         {
           name: 'servicebus-connection-string'
           value: serviceBusConnectionString
+        }
+        {
+          name: 'storageaccount-connection-string'
+          value: storageAccountConnectionString
         }
         {
           name: 'container-registry-secret'
@@ -97,6 +102,10 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
             {
               name: 'ServiceBusConnection'
               secretRef: 'servicebus-connection-string'
+            }
+            {
+              name: 'StorageAccountConnection'
+              secretRef: 'storageaccount-connection-string'
             }
           ]
           resources: {
