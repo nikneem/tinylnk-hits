@@ -19,11 +19,6 @@ static async Task Main()
     var serviceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnection");
     var storageAccountConnection = Environment.GetEnvironmentVariable("StorageAccountConnection");
 
-    if (string.IsNullOrEmpty(serviceBusConnectionString))
-    {
-        throw new ArgumentNullException("ServiceBusConnection", "ServiceBusConnection environment variable is not set");
-    }
-
     var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
     var receiver = serviceBusClient.CreateReceiver(sourceQueueName);
 
