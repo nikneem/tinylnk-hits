@@ -40,6 +40,9 @@ resource hitsStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
   name: 'tinylnk-jobs-hits-processor'
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     environmentId: containerAppEnvironment.id
     configuration: {
@@ -47,10 +50,6 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
         {
           name: 'servicebus-connection-string'
           value: serviceBusConnectionString
-        }
-        {
-          name: 'storageaccount-connection-string'
-          value: storageAccountConnectionString
         }
         {
           name: 'container-registry-secret'
@@ -104,8 +103,8 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
               secretRef: 'servicebus-connection-string'
             }
             {
-              name: 'StorageAccountConnection'
-              secretRef: 'storageaccount-connection-string'
+              name: 'StorageAccountName'
+              secretRef: hitsStorageAccount.name
             }
           ]
           resources: {
@@ -115,5 +114,17 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
         }
       ]
     }
+  }
+}
+
+resource storageTableDataContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+  name: '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
+}
+module storageTableDataContributorRoleAssignment 'roleAssignment.bicep' = {
+  name: 'storageTableDataContributorRoleAssignment'
+  params: {
+    principalId: hitsProcessorJob.identity.principalId
+    roleDefinitionId: storageTableDataContributorRoleDefinition.id
+    principalType: 'ServicePrincipal'
   }
 }

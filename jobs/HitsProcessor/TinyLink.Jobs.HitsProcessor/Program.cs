@@ -17,7 +17,11 @@ static async Task Main()
     Console.WriteLine("Starting the hits processor job");
 
     var serviceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnection");
-    var storageAccountConnection = Environment.GetEnvironmentVariable("StorageAccountConnection");
+    var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
+
+    var identity = new ManagedIdentityCredential();
+    var storageAccountUrl = new Uri($"https://{config.Value.StorageAccountName}.table.core.windows.net");
+    _tableClient = new TableClient(storageAccountUrl, TableName, identity);
 
     var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
     var receiver = serviceBusClient.CreateReceiver(sourceQueueName);
