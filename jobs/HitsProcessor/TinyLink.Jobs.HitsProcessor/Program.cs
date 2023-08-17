@@ -3,6 +3,7 @@ using Azure;
 using System.Diagnostics;
 using System.Text;
 using Azure.Data.Tables;
+using Azure.Identity;
 using Newtonsoft.Json;
 using TinyLink.Core.Commands.CommandMessages;
 using TinyLink.Jobs.HitsProcessor.Entities;
@@ -20,8 +21,7 @@ static async Task Main()
     var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
 
     var identity = new ManagedIdentityCredential();
-    var storageAccountUrl = new Uri($"https://{config.Value.StorageAccountName}.table.core.windows.net");
-    _tableClient = new TableClient(storageAccountUrl, TableName, identity);
+    var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
 
     var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
     var receiver = serviceBusClient.CreateReceiver(sourceQueueName);
@@ -51,7 +51,7 @@ static async Task Main()
             };
 
             Console.WriteLine("Created entity instance");
-            var client = new TableClient(storageAccountConnection, storageTableName);
+            var client = new TableClient(storageAccountUrl, storageTableName, identity);
             Console.WriteLine("Saving entity in table storage");
             await client.UpsertEntityAsync(voteEntity);
 
