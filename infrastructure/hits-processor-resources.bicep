@@ -104,7 +104,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
             }
             {
               name: 'StorageAccountName'
-              secretRef: hitsStorageAccount.name
+              value: hitsStorageAccount.name
             }
           ]
           resources: {
