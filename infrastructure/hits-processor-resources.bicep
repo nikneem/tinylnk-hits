@@ -95,7 +95,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
     template: {
       containers: [
         {
-          image: '${containerRegistry.properties.loginServer}/hits-processor:${containerVersion}'
+          image: '${containerRegistry.properties.loginServer}/tinylnk-jobs-hitsprocessor:${containerVersion}'
           name: 'hits-processor'
           env: [
             {
