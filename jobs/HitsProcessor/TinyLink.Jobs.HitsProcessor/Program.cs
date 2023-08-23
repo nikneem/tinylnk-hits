@@ -22,7 +22,6 @@ static async Task Main()
 
     var identity = new ManagedIdentityCredential();
     var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
-
     var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
     var receiver = serviceBusClient.CreateReceiver(sourceQueueName);
 
