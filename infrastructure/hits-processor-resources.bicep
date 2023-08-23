@@ -70,10 +70,12 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
             {
               name: 'azure-servicebus-queue-rule'
               type: 'azure-servicebus'
-              metadata: any({
-                queueName: 'hits'
-                connection: 'servicebus-connection-string'
-              })
+              metadata: any(
+                {
+                  queueName: 'hits'
+                  connection: 'servicebus-connection-string'
+                }
+              )
               auth: [
                 {
                   secretRef: 'servicebus-connection-string'
