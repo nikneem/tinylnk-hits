@@ -23,12 +23,22 @@ var hitsQueueNames = [
 
 var apiHostName = 'hits.tinylnk.nl'
 
+module certificate 'managedCertificate.bicep' = {
+  name: 'certificateModule'
+  scope: resourceGroup(integrationResourceGroupName)
+  params: {
+    hostname: apiHostName
+    location: location
+    managedEnvironmentName: containerAppEnvironmentName
+  }
+}
+
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-04-01-preview' existing = {
   name: containerAppEnvironmentName
   scope: resourceGroup(integrationResourceGroupName)
-  // resource apiCert 'managedCertificates' existing = {
-  //   name: '${replace(apiHostName, '.', '-')}-cert'
-  // }
+  resource apiCert 'managedCertificates' existing = {
+    name: '${replace(apiHostName, '.', '-')}-cert'
+  }
 }
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-12-01' existing = {
   name: containerRegistryName
