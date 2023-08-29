@@ -1,64 +1,57 @@
 ﻿using Azure.Messaging.ServiceBus;
-using Azure;
 using System.Diagnostics;
 using System.Text;
-using Azure.Data.Tables;
-using Azure.Identity;
 using Newtonsoft.Json;
 using TinyLink.Core.Commands.CommandMessages;
-using TinyLink.Jobs.HitsProcessor.Entities;
+using TinyLink.Hits.TableStorage;
 
-const string sourceQueueName = "hits";
+Console.WriteLine("Starting the hits processor job");
 
-const string storageTableName = "hits";
-const string partitionKey = "hit";
+var sourceQueueName = Environment.GetEnvironmentVariable("QueueName");
+var serviceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnection");
+var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
 
-static async Task Main()
+if (string.IsNullOrWhiteSpace(sourceQueueName))
 {
-    Console.WriteLine("Starting the hits processor job");
-
-    var serviceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnection");
-    var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
-
-    var identity = new ManagedIdentityCredential();
-    var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
-    var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
-    var receiver = serviceBusClient.CreateReceiver(sourceQueueName);
-
-    Console.WriteLine("Receiving message from service bus");
-    var receivedMessage = await receiver.ReceiveMessageAsync();
-
-    if (receivedMessage != null)
-    {
-        Console.WriteLine("Got a message from the service bus");
-        var payloadString = Encoding.UTF8.GetString(receivedMessage.Body);
-        var payload = JsonConvert.DeserializeObject<ProcessHitCommand>(payloadString);
-        if (payload != null)
-        {
-            Console.WriteLine("Processing hit command, persisting to storage");
-
-            Activity.Current?.AddTag("ShortCode", payload.ShortCode);
-            Activity.Current?.AddTag("CreatedOn", payload.CreatedOn.ToString());
-
-            var voteEntity = new ShortLinkHitEntity
-            {
-                PartitionKey = partitionKey,
-                RowKey = Guid.NewGuid().ToString(),
-                ShortCode = payload.ShortCode,
-                Timestamp = payload.CreatedOn,
-                ETag = ETag.All
-            };
-
-            Console.WriteLine("Created entity instance");
-            var client = new TableClient(storageAccountUrl, storageTableName, identity);
-            Console.WriteLine("Saving entity in table storage");
-            await client.UpsertEntityAsync(voteEntity);
-
-            Console.WriteLine("Completing original message in service bus");
-            await receiver.CompleteMessageAsync(receivedMessage);
-            Console.WriteLine("All good, process complete");
-        }
-    }
+    Console.WriteLine("Service bus queue name not configured properly");
+    return;
+}
+if (string.IsNullOrWhiteSpace(serviceBusConnectionString))
+{
+    Console.WriteLine("Service bus connection not configured properly");
+    return;
+}
+if (string.IsNullOrWhiteSpace(storageAccountName))
+{
+    Console.WriteLine("Storage account name not configured properly");
+    return;
 }
 
-await Main();
+var serviceBusClient = new ServiceBusClient(serviceBusConnectionString);
+var receiver = serviceBusClient.CreateReceiver(sourceQueueName);
+
+Console.WriteLine("Receiving message from service bus");
+var receivedMessage = await receiver.ReceiveMessageAsync();
+
+if (receivedMessage != null)
+{
+    Console.WriteLine("Got a message from the service bus");
+    var payloadString = Encoding.UTF8.GetString(receivedMessage.Body);
+    var payload = JsonConvert.DeserializeObject<ProcessHitCommand>(payloadString);
+    if (payload != null)
+    {
+        Console.WriteLine("Processing hit command, persisting to storage");
+
+        Activity.Current?.AddTag("ShortCode", payload.ShortCode);
+        Activity.Current?.AddTag("CreatedOn", payload.CreatedOn.ToString());
+
+        Console.WriteLine("Created entity instance");
+        var hitsRepository = new HitsRepository(storageAccountName);
+        Console.WriteLine("Saving entity in table storage");
+        await hitsRepository.CreateAsync(payload.OwnerId, payload.ShortCode, payload.CreatedOn);
+
+        Console.WriteLine("Completing original message in service bus");
+        await receiver.CompleteMessageAsync(receivedMessage);
+        Console.WriteLine("All good, process complete");
+    }
+}

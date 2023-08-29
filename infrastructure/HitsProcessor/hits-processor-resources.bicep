@@ -16,11 +16,13 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-12-01' e
 resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = {
   name: serviceBusName
   scope: resourceGroup(integrationResourceGroupName)
+  resource queue 'queues' existing = {
+    name: 'hitsprocessorqueue'
+  }
 }
 
 var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
 var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
-var storageAccountConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${hitsStorageAccount.name};AccountKey=${hitsStorageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
 
 resource hitsStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: uniqueString(resourceGroup().name)
@@ -29,9 +31,9 @@ resource hitsStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   sku: {
     name: 'Standard_LRS'
   }
-  resource hitsTableStorageService 'tableServices' = {
+  resource hitsTableStorageService 'tableServices' existing = {
     name: 'default'
-    resource table 'tables' = {
+    resource table 'tables' existing = {
       name: 'hits'
     }
   }
@@ -103,6 +105,10 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
             {
               name: 'ServiceBusConnection'
               secretRef: 'servicebus-connection-string'
+            }
+            {
+              name: 'QueueName'
+              secretRef: serviceBus::queue.name
             }
             {
               name: 'StorageAccountName'
