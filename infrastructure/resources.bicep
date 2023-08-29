@@ -23,16 +23,6 @@ var hitsQueueNames = [
 
 var apiHostName = 'hits.tinylnk.nl'
 
-module certificate 'managedCertificate.bicep' = {
-  name: 'certificateModule'
-  scope: resourceGroup(integrationResourceGroupName)
-  params: {
-    hostname: apiHostName
-    location: location
-    managedEnvironmentName: containerAppEnvironmentName
-  }
-}
-
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-04-01-preview' existing = {
   name: containerAppEnvironmentName
   scope: resourceGroup(integrationResourceGroupName)
@@ -125,8 +115,8 @@ resource apiContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
         customDomains: [
           {
             name: apiHostName
-            bindingType: 'Disabled'
-            //certificateId: containerAppEnvironment::apiCert.id
+            bindingType: 'SniEnabled'
+            certificateId: containerAppEnvironment::apiCert.id
           }
         ]
       }

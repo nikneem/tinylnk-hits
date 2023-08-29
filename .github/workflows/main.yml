@@ -2,7 +2,12 @@ name: Hits API Workflow
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+    paths-ignore:
+      - "jobs/HitsProcessor/**"
+      - ".github/workflows/hits-processor-workflow.yml"
+      - "infrastructure/HitsProcessor/**"
 
 env:
   IMAGE_NAME: tinylnk-hits
