@@ -78,12 +78,22 @@ foreach (var entity in totalEntities)
         Hits = entity.Hits,
         Timestamp = entity.Timestamp,
     };
-    var existingEntity = await tableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey, cancellationToken: CancellationToken.None);
-    if (existingEntity.HasValue)
+    try
     {
-        Console.WriteLine($"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
-        totalHitsEntity.Hits += existingEntity.Value.Hits;
-        Console.WriteLine($"Added up to a new total of {totalHitsEntity.Hits}");
+        var existingEntity =
+            await tableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey,
+                cancellationToken: CancellationToken.None);
+        if (existingEntity.HasValue)
+        {
+            Console.WriteLine(
+                $"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
+            totalHitsEntity.Hits += existingEntity.Value.Hits;
+            Console.WriteLine($"Added up to a new total of {totalHitsEntity.Hits}");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine( ex.ToString() );
     }
 
     totalCounterTransaction.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, totalHitsEntity));
