@@ -34,6 +34,7 @@ Console.WriteLine("Configuration fine, retrieving hits from source table");
 var identity = new ManagedIdentityCredential();
 var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
 var tableClient = new TableClient(storageAccountUrl, sourceTableName, identity);
+var tenMinutesTableClient = new TableClient(storageAccountUrl, totalTableName, identity);
 var totalTableClient = new TableClient(storageAccountUrl, totalTableName, identity);
 
 var hitsQuery = tableClient.QueryAsync<HitTableEntity>($"{nameof(HitTableEntity.PartitionKey)} eq 'hit'");
@@ -81,7 +82,7 @@ foreach (var entity in totalEntities)
     };
     try
     {
-        var existingEntity = await tableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey, cancellationToken: CancellationToken.None);
+        var existingEntity = await totalTableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey, cancellationToken: CancellationToken.None);
         if (existingEntity.HasValue)
         {
             Console.WriteLine($"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
@@ -103,59 +104,59 @@ if (totalCounterTransaction.Count > 0)
     await totalTableClient.SubmitTransactionAsync(totalCounterTransaction, CancellationToken.None);
 }
 
-//Console.WriteLine($"Total hits calculation complete, now working on ten minute accumulatives");
+Console.WriteLine($"Total hits calculation complete, now working on ten minute accumulatives");
 
-//var calculatedMinDate = withTimeStamp.Min(ent => ent.Timestamp).Value;
-//Console.WriteLine($"Working with a found min date of {calculatedMinDate}");
+var calculatedMinDate = withTimeStamp.Min(ent => ent.Timestamp).Value;
+Console.WriteLine($"Working with a found min date of {calculatedMinDate}");
 
-//// Need to try and group accumulates in logical chunks of 10 minutes. So when min date
-//// is 15:35:24, normalize to 15:30:00 and then take steps of 10 minutes
-//var roundedMinute = calculatedMinDate.Minute - calculatedMinDate.Minute % 10;
-//var minDate = new DateTimeOffset(
-//    calculatedMinDate.Year,
-//    calculatedMinDate.Month,
-//    calculatedMinDate.Day,
-//    calculatedMinDate.Hour,
-//    roundedMinute,
-//    0,
-//    TimeSpan.Zero);
-//Console.WriteLine($"Calculated to logical chunk of min date {minDate}");
+// Need to try and group accumulates in logical chunks of 10 minutes. So when min date
+// is 15:35:24, normalize to 15:30:00 and then take steps of 10 minutes
+var roundedMinute = calculatedMinDate.Minute - calculatedMinDate.Minute % 10;
+var minDate = new DateTimeOffset(
+    calculatedMinDate.Year,
+    calculatedMinDate.Month,
+    calculatedMinDate.Day,
+    calculatedMinDate.Hour,
+    roundedMinute,
+    0,
+    TimeSpan.Zero);
+Console.WriteLine($"Calculated to logical chunk of min date {minDate}");
 
-//do
-//{
-//    var maxDate = minDate.AddMinutes(10);
-//    var currentBatch = withTimeStamp.Where(ent => ent.Timestamp >= minDate && ent.Timestamp <= maxDate);
+do
+{
+    var maxDate = minDate.AddMinutes(10);
+    var currentBatch = withTimeStamp.Where(ent => ent.Timestamp >= minDate && ent.Timestamp <= maxDate);
 
-//    var accumulatedEntities = currentBatch.GroupBy(ent => ent.ShortCode).Select(ent =>
-//        new HitTableEntity
-//        {
-//            PartitionKey = "hits",
-//            RowKey = minDate.ToString("yyyyMMddHHmm"),
-//            ShortCode = ent.First().ShortCode,
-//            OwnerId = ent.First().OwnerId,
-//            Hits = ent.Count(),
-//        });
+    var accumulatedEntities = currentBatch.GroupBy(ent => ent.ShortCode).Select(ent =>
+        new HitTableEntity
+        {
+            PartitionKey = "hits",
+            RowKey = minDate.ToString("yyyyMMddHHmm"),
+            ShortCode = ent.First().ShortCode,
+            OwnerId = ent.First().OwnerId,
+            Hits = ent.Count(),
+        });
 
-//    var insertAccumulatedEntities = accumulatedEntities.Select(
-//        ent =>
-//        {
-//            Console.WriteLine($"Adding accumulative for {ent.ShortCode} with hit count {ent.Hits}");
-//            return new TableTransactionAction(TableTransactionActionType.Add, ent);
-//        });
+    var insertAccumulatedEntities = accumulatedEntities.Select(
+        ent =>
+        {
+            Console.WriteLine($"Adding accumulative for {ent.ShortCode} with hit count {ent.Hits}");
+            return new TableTransactionAction(TableTransactionActionType.Add, ent);
+        });
 
-//    await tableClient.SubmitTransactionAsync(insertAccumulatedEntities);
-//    minDate = minDate.AddMinutes(10);
-//} while (minDate < DateTimeOffset.UtcNow);
+    await tenMinutesTableClient.SubmitTransactionAsync(insertAccumulatedEntities);
+    minDate = minDate.AddMinutes(10);
+} while (minDate < DateTimeOffset.UtcNow);
 
 
 
-//var deleteTransactions = new List<TableTransactionAction>();
-//foreach (var entity in entities)
-//{
-//    deleteTransactions.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
-//}
+var deleteTransactions = new List<TableTransactionAction>();
+foreach (var entity in entities)
+{
+    deleteTransactions.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
+}
 
-//await tableClient.SubmitTransactionAsync(deleteTransactions);
+await tableClient.SubmitTransactionAsync(deleteTransactions);
 
 return 0;
 
