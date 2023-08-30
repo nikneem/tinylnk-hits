@@ -122,6 +122,7 @@ var minDate = new DateTimeOffset(
     TimeSpan.Zero);
 Console.WriteLine($"Calculated to logical chunk of min date {minDate}");
 
+var batchedOperations = new List<TableTransactionAction>();
 do
 {
     var maxDate = minDate.AddMinutes(10);
@@ -137,16 +138,21 @@ do
             Hits = ent.Count(),
         });
 
-    var insertAccumulatedEntities = accumulatedEntities.Select(
+    batchedOperations.AddRange(
+    accumulatedEntities.Select(
         ent =>
         {
             Console.WriteLine($"Adding accumulative for {ent.ShortCode} with hit count {ent.Hits}");
             return new TableTransactionAction(TableTransactionActionType.UpsertReplace, ent);
-        });
-
-    await tenMinutesTableClient.SubmitTransactionAsync(insertAccumulatedEntities);
+        }));
     minDate = minDate.AddMinutes(10);
 } while (minDate < DateTimeOffset.UtcNow);
+
+if (batchedOperations.Count > 0)
+{
+   Console.WriteLine($"Submitting batch of {batchedOperations.Count} ten-minute accumulation operations.");
+    await tenMinutesTableClient.SubmitTransactionAsync(batchedOperations);
+}
 
 
 
@@ -156,7 +162,10 @@ foreach (var entity in entities)
     deleteTransactions.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
 }
 
-await tableClient.SubmitTransactionAsync(deleteTransactions);
+if (deleteTransactions.Any())
+{
+    await tableClient.SubmitTransactionAsync(deleteTransactions);
+}
 
 return 0;
 
