@@ -141,7 +141,7 @@ do
         ent =>
         {
             Console.WriteLine($"Adding accumulative for {ent.ShortCode} with hit count {ent.Hits}");
-            return new TableTransactionAction(TableTransactionActionType.Add, ent);
+            return new TableTransactionAction(TableTransactionActionType.UpsertReplace, ent);
         });
 
     await tenMinutesTableClient.SubmitTransactionAsync(insertAccumulatedEntities);
