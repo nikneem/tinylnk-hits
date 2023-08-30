@@ -34,7 +34,7 @@ Console.WriteLine("Configuration fine, retrieving hits from source table");
 var identity = new ManagedIdentityCredential();
 var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
 var tableClient = new TableClient(storageAccountUrl, sourceTableName, identity);
-var tenMinutesTableClient = new TableClient(storageAccountUrl, totalTableName, identity);
+var tenMinutesTableClient = new TableClient(storageAccountUrl, tenMinutesTableName, identity);
 var totalTableClient = new TableClient(storageAccountUrl, totalTableName, identity);
 
 var hitsQuery = tableClient.QueryAsync<HitTableEntity>($"{nameof(HitTableEntity.PartitionKey)} eq 'hit'");
@@ -130,7 +130,7 @@ do
     var accumulatedEntities = currentBatch.GroupBy(ent => ent.ShortCode).Select(ent =>
         new HitTableEntity
         {
-            PartitionKey = "hits",
+            PartitionKey = ent.First().ShortCode,
             RowKey = minDate.ToString("yyyyMMddHHmm"),
             ShortCode = ent.First().ShortCode,
             OwnerId = ent.First().OwnerId,
