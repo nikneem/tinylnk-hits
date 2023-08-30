@@ -6,7 +6,6 @@ using TinyLink.Core.Commands.CommandMessages;
 using TinyLink.Hits.TableStorage;
 
 Console.WriteLine("Starting the hits processor job");
-
 var sourceQueueName = Environment.GetEnvironmentVariable("QueueName");
 var serviceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnection");
 var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
