@@ -122,13 +122,13 @@ var minDate = new DateTimeOffset(
     TimeSpan.Zero);
 Console.WriteLine($"Calculated to logical chunk of min date {minDate}");
 
-var batchedOperations = new List<TableTransactionAction>();
+var tenMinutesAccumulatedEntities = new List<HitTableEntity>();
 do
 {
     var maxDate = minDate.AddMinutes(10);
     var currentBatch = withTimeStamp.Where(ent => ent.Timestamp >= minDate && ent.Timestamp <= maxDate);
 
-    var accumulatedEntities = currentBatch.GroupBy(ent => ent.ShortCode).Select(ent =>
+    tenMinutesAccumulatedEntities.AddRange( currentBatch.GroupBy(ent => ent.ShortCode).Select(ent =>
         new HitTableEntity
         {
             PartitionKey = ent.First().ShortCode,
@@ -136,22 +136,18 @@ do
             ShortCode = ent.First().ShortCode,
             OwnerId = ent.First().OwnerId,
             Hits = ent.Count(),
-        });
-
-    batchedOperations.AddRange(
-    accumulatedEntities.Select(
-        ent =>
-        {
-            Console.WriteLine($"Adding accumulative for {ent.ShortCode} with hit count {ent.Hits}");
-            return new TableTransactionAction(TableTransactionActionType.UpsertReplace, ent);
         }));
+
     minDate = minDate.AddMinutes(10);
 } while (minDate < DateTimeOffset.UtcNow);
 
-if (batchedOperations.Count > 0)
+if (tenMinutesAccumulatedEntities.Count > 0)
 {
-   Console.WriteLine($"Submitting batch of {batchedOperations.Count} ten-minute accumulation operations.");
-    await tenMinutesTableClient.SubmitTransactionAsync(batchedOperations);
+    Console.WriteLine($"Submitting batch of {tenMinutesAccumulatedEntities.Count} ten-minute accumulation operations.");
+    foreach (var entity in tenMinutesAccumulatedEntities)
+    {
+        await tenMinutesTableClient.UpsertEntityAsync(entity, TableUpdateMode.Replace, CancellationToken.None);
+    }
 }
 
 
