@@ -9,6 +9,7 @@ on:
 
 env:
   IMAGE_NAME: tinylnk-jobs-hitsprocessor
+  BICEP_PATH: infrastructure/HitsProcessor
 
 permissions:
   id-token: write
@@ -39,15 +40,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build & Push
-        working-directory: infrastructure/HitsProcessor
+        working-directory: $BICEP_PATH
         run: |
-          az bicep build --file hits-processor.bicep
-          bicep build-params hits-processor.params.bicepparam
+          az bicep build --file main.bicep
+          bicep build-params main.params.bicepparam
       - name: Publish Artifact
         uses: actions/upload-artifact@v3
         with:
           name: bicep-templates
-          path: infrastructure/HitsProcessor/*.json
+          path: $BICEP_PATH/*.json
 
   build:
     needs: [versionize]
@@ -91,4 +92,4 @@ jobs:
         id: arm
         uses: Azure/cli@v1
         with:
-          inlineScript: az deployment sub create --name tinylink-hits-proc-northeurope --location northeurope --template-file ./infrastructure/hits-processor.json --parameters ./infrastructure/hits-processor.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
+          inlineScript: az deployment sub create --name tinylink-hits-proc-northeurope --location northeurope --template-file ./infrastructure/main.json --parameters ./infrastructure/main.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}

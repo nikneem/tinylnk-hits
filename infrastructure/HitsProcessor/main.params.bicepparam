@@ -1,4 +1,4 @@
-using './hits-processor.bicep'
+using './main.bicep'
 
 param containerVersion = '0.1.33'
 param integrationResourceGroupName = 'tinylnk-integration-ne'

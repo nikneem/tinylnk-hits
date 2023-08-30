@@ -6,11 +6,11 @@ FROM mcr.microsoft.com/dotnet/runtime:7.0 AS base
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-WORKDIR /src
+WORKDIR /jobs/HitsProcessor
 COPY ["TinyLink.Jobs.HitsProcessor/TinyLink.Jobs.HitsProcessor.csproj", "TinyLink.Jobs.HitsProcessor/"]
 RUN dotnet restore "TinyLink.Jobs.HitsProcessor/TinyLink.Jobs.HitsProcessor.csproj"
 COPY . .
-WORKDIR "/src/TinyLink.Jobs.HitsProcessor"
+WORKDIR "/jobs/HitsProcessor/TinyLink.Jobs.HitsProcessor"
 RUN dotnet build "TinyLink.Jobs.HitsProcessor.csproj" -c Release -o /app/build
 
 FROM build AS publish
