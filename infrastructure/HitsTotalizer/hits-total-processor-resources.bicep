@@ -35,7 +35,7 @@ resource hitsStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 }
 
 resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
-  name: 'tinylnk-jobs-calc-totals-processor'
+  name: 'tinylnk-jobs-totals-processor'
   location: location
   identity: {
     type: 'SystemAssigned'
