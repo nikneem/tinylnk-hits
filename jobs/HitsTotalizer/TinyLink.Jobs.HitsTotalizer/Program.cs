@@ -82,7 +82,7 @@ foreach (var entity in totalEntities)
     };
     try
     {
-        var existingEntity = await totalTableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey, cancellationToken: CancellationToken.None);
+        var existingEntity = await totalTableClient.GetEntityAsync<HitTableEntity>("total", entity.RowKey, cancellationToken: CancellationToken.None);
         if (existingEntity.HasValue)
         {
             Console.WriteLine($"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
