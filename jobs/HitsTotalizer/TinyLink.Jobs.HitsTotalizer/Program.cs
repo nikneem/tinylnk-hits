@@ -80,30 +80,27 @@ foreach (var entity in totalEntities)
     };
     try
     {
-        var existingEntity =
-            await tableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey,
-                cancellationToken: CancellationToken.None);
+        var existingEntity = await tableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey, cancellationToken: CancellationToken.None);
         if (existingEntity.HasValue)
         {
-            Console.WriteLine(
-                $"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
+            Console.WriteLine($"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
             totalHitsEntity.Hits += existingEntity.Value.Hits;
             Console.WriteLine($"Added up to a new total of {totalHitsEntity.Hits}");
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine( ex.ToString() );
+        Console.WriteLine( ex.Message );
     }
 
     totalCounterTransaction.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, totalHitsEntity));
 }
 
-//if (totalCounterTransaction.Count > 0)
-//{
-//    Console.WriteLine($"Submitting a transaction of {totalCounterTransaction} operations for UpsertReplace of total counts");
-//    await tableClient.SubmitTransactionAsync(totalCounterTransaction, CancellationToken.None);
-//}
+if (totalCounterTransaction.Count > 0)
+{
+    Console.WriteLine($"Submitting a transaction of {totalCounterTransaction} operations for UpsertReplace of total counts");
+    await tableClient.SubmitTransactionAsync(totalCounterTransaction, CancellationToken.None);
+}
 
 //Console.WriteLine($"Total hits calculation complete, now working on ten minute accumulatives");
 
