@@ -31,25 +31,25 @@ if (string.IsNullOrWhiteSpace(totalTableName))
 
 Console.WriteLine("Configuration fine, retrieving hits from source table");
 
-//var identity = new ManagedIdentityCredential();
-//var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
-//var tableClient = new TableClient(storageAccountUrl, sourceTableName, identity);
+var identity = new ManagedIdentityCredential();
+var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
+var tableClient = new TableClient(storageAccountUrl, sourceTableName, identity);
 
-//var hitsQuery = tableClient.QueryAsync<HitTableEntity>($"{nameof(HitTableEntity.PartitionKey)} eq 'hit'");
-//var entities = new List<HitTableEntity>();
-//Console.WriteLine("Downloading unprocessed hits from calculation table");
+var hitsQuery = tableClient.QueryAsync<HitTableEntity>($"{nameof(HitTableEntity.PartitionKey)} eq 'hit'");
+var entities = new List<HitTableEntity>();
+Console.WriteLine("Downloading unprocessed hits from calculation table");
 
-//await foreach (var queryPage in hitsQuery.AsPages().WithCancellation(CancellationToken.None))
-//{
-//    entities.AddRange(queryPage.Values);
-//}
-//Console.WriteLine($"Downloaded {entities.Count} entities for accumulation");
-//if (entities.Count == 0)
-//{
-//    // Nothing to do, safely exit
-//    Console.WriteLine($"{entities.Count} hits waiting, nothing to do, exiting");
-//    return 0;
-//}
+await foreach (var queryPage in hitsQuery.AsPages().WithCancellation(CancellationToken.None))
+{
+    entities.AddRange(queryPage.Values);
+}
+Console.WriteLine($"Downloaded {entities.Count} entities for accumulation");
+if (entities.Count == 0)
+{
+    // Nothing to do, safely exit
+    Console.WriteLine($"{entities.Count} hits waiting, nothing to do, exiting");
+    return 0;
+}
 
 //var withTimeStamp = entities.Where(ent => ent.Timestamp.HasValue).ToList();
 
