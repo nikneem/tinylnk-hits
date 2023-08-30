@@ -34,6 +34,7 @@ Console.WriteLine("Configuration fine, retrieving hits from source table");
 var identity = new ManagedIdentityCredential();
 var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
 var tableClient = new TableClient(storageAccountUrl, sourceTableName, identity);
+var totalTableClient = new TableClient(storageAccountUrl, totalTableName, identity);
 
 var hitsQuery = tableClient.QueryAsync<HitTableEntity>($"{nameof(HitTableEntity.PartitionKey)} eq 'hit'");
 var entities = new List<HitTableEntity>();
@@ -98,8 +99,8 @@ foreach (var entity in totalEntities)
 
 if (totalCounterTransaction.Count > 0)
 {
-    Console.WriteLine($"Submitting a transaction of {totalCounterTransaction} operations for UpsertReplace of total counts");
-    await tableClient.SubmitTransactionAsync(totalCounterTransaction, CancellationToken.None);
+    Console.WriteLine($"Submitting a transaction of {totalCounterTransaction.Count} operations for UpsertReplace of total counts");
+    await totalTableClient.SubmitTransactionAsync(totalCounterTransaction, CancellationToken.None);
 }
 
 //Console.WriteLine($"Total hits calculation complete, now working on ten minute accumulatives");
