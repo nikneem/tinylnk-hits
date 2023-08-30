@@ -3,12 +3,12 @@ name: Hits Calculations Processor Workflow
 on:
   push:
     paths:
-      - "jobs/HitsCalcProcessor/**"
-      - ".github/workflows/hits-calc-processor-workflow.yml"
-      - "infrastructure/HitsCalcProcessor/**"
+      - "jobs/HitsTotalizer/**"
+      - ".github/workflows/hits-totalizer-workflow.yml"
+      - "infrastructure/HitsTotalizer/**"
 
 env:
-  IMAGE_NAME: tinylnk-jobs-hitscalcprocessor
+  IMAGE_NAME: tinylnk-jobs-hitstotalprocessor
 
 permissions:
   id-token: write
@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build & Push
-        working-directory: infrastructure/HitsCalcProcessor
+        working-directory: infrastructure/HitsTotalizer
         run: |
           az bicep build --file main.bicep
           bicep build-params main.params.bicepparam
@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: bicep-templates
-          path: infrastructure/HitsCalcProcessor/*.json
+          path: infrastructure/HitsTotalizer/*.json
 
   build:
     needs: [versionize]
@@ -91,4 +91,4 @@ jobs:
         id: arm
         uses: Azure/cli@v1
         with:
-          inlineScript: az deployment sub create --name tinylink-hits-calc-proc-northeurope --location northeurope --template-file ./infrastructure/main.json --parameters ./infrastructure/main.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
+          inlineScript: az deployment sub create --name tinylink-hits-total-proc-northeurope --location northeurope --template-file ./infrastructure/main.json --parameters ./infrastructure/main.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}

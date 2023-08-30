@@ -11,7 +11,6 @@ var defaultResourceName = '${systemName}-ne'
 var containerRegistryPasswordSecretRef = 'container-registry-password'
 
 var tables = [
-  'shortlinks'
   'hits'
   'hitsforcalculation'
   'hitsbytenminutes'

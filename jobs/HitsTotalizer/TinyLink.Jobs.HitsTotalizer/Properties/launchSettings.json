@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TinyLink.Jobs.HitsTotalizer": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
