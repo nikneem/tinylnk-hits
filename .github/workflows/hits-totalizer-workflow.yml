@@ -1,4 +1,4 @@
-name: Hits Calculations Processor Workflow
+name: Hits Totalizer Processor Workflow
 
 on:
   push:

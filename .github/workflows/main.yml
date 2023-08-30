@@ -11,6 +11,10 @@ on:
       - "jobs/HitsCalcProcessor/**"
       - ".github/workflows/hits-calc-processor-workflow.yml"
       - "infrastructure/HitsCalcProcessor/**"
+      - "jobs/HitsTotalizer/**"
+      - ".github/workflows/hits-totalizer-workflow.yml"
+      - "infrastructure/HitsTotalizer/**"
+
 env:
   IMAGE_NAME: tinylnk-hits
 
