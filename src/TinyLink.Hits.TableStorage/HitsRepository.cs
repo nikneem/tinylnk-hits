@@ -163,6 +163,6 @@ public class HitsRepository : IHitsRepository
     {
         var identity = new ManagedIdentityCredential();
         var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
-        _tableClient = new TableClient(storageAccountUrl, TableName, identity); ;
+        _tableClient = new TableClient(storageAccountUrl, TableName, identity);
     }
 }

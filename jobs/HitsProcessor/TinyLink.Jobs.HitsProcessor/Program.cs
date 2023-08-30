@@ -1,14 +1,19 @@
 ﻿using Azure.Messaging.ServiceBus;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Newtonsoft.Json;
 using TinyLink.Core.Commands.CommandMessages;
-using TinyLink.Hits.TableStorage;
+using Azure.Data.Tables;
+using Azure.Identity;
+using Azure;
+using TinyLink.Jobs.HitsProcessor.Entities;
 
 Console.WriteLine("Starting the hits processor job");
 var sourceQueueName = Environment.GetEnvironmentVariable("QueueName");
 var serviceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnection");
 var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
+var tableName = Environment.GetEnvironmentVariable("StorageTableName");
 
 if (string.IsNullOrWhiteSpace(sourceQueueName))
 {
@@ -44,13 +49,33 @@ if (receivedMessage != null)
         Activity.Current?.AddTag("ShortCode", payload.ShortCode);
         Activity.Current?.AddTag("CreatedOn", payload.CreatedOn.ToString());
 
-        Console.WriteLine("Created entity instance");
-        var hitsRepository = new HitsRepository(storageAccountName);
-        Console.WriteLine("Saving entity in table storage");
-        await hitsRepository.CreateAsync(payload.OwnerId, payload.ShortCode, payload.CreatedOn);
+        Console.WriteLine("Create table client");
+        var identity = new ManagedIdentityCredential();
+        var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
+        var tableClient = new TableClient(storageAccountUrl, tableName, identity);
 
-        Console.WriteLine("Completing original message in service bus");
-        await receiver.CompleteMessageAsync(receivedMessage);
-        Console.WriteLine("All good, process complete");
+        Console.WriteLine("Construct table entity");
+        var voteEntity = new HitTableEntity
+        {
+            PartitionKey = "hit",
+            RowKey = Guid.NewGuid().ToString(),
+            ShortCode = payload.ShortCode,
+            OwnerId = payload.OwnerId,
+            Hits = 1,
+            Timestamp = payload.CreatedOn,
+            ETag = ETag.All
+        };
+        var response = await tableClient.UpsertEntityAsync(voteEntity);
+        if (response.IsError)
+        {
+            Console.WriteLine("Saving Hit entity to table storage failed");
+        }
+        else
+        {
+            Console.WriteLine("Completing original message in service bus");
+            await receiver.CompleteMessageAsync(receivedMessage);
+            Console.WriteLine("All good, process complete");
+        }
     }
 }
+
