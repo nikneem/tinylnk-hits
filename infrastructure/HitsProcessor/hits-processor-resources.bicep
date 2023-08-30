@@ -74,7 +74,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
               type: 'azure-servicebus'
               metadata: any(
                 {
-                  queueName: 'hits'
+                  queueName: serviceBus::queue.name
                   connection: 'servicebus-connection-string'
                 }
               )
@@ -113,6 +113,10 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
             {
               name: 'StorageAccountName'
               value: hitsStorageAccount.name
+            }
+            {
+              name: 'StorageTableName'
+              value: hitsStorageAccount::hitsTableStorageService::table.name
             }
           ]
           resources: {
