@@ -13,6 +13,7 @@ var containerRegistryPasswordSecretRef = 'container-registry-password'
 var tables = [
   'shortlinks'
   'hits'
+  'hitsforcalculation'
   'hitsbytenminutes'
   'hitstotal'
 ]

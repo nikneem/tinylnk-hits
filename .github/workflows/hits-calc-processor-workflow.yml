@@ -1,18 +1,14 @@
-name: Hits API Workflow
+name: Hits Processor Workflow
 
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - "jobs/HitsProcessor/**"
-      - ".github/workflows/hits-processor-workflow.yml"
-      - "infrastructure/HitsProcessor/**"
+    paths:
       - "jobs/HitsCalcProcessor/**"
       - ".github/workflows/hits-calc-processor-workflow.yml"
       - "infrastructure/HitsCalcProcessor/**"
+
 env:
-  IMAGE_NAME: tinylnk-hits
+  IMAGE_NAME: tinylnk-jobs-hitscalcprocessor
 
 permissions:
   id-token: write
@@ -38,6 +34,21 @@ jobs:
         with:
           useConfigFile: true
 
+  publish-bicep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build & Push
+        working-directory: infrastructure/HitsCalcProcessor
+        run: |
+          az bicep build --file main.bicep
+          bicep build-params main.params.bicepparam
+      - name: Publish Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bicep-templates
+          path: infrastructure/HitsCalcProcessor/*.json
+
   build:
     needs: [versionize]
     runs-on: ubuntu-latest
@@ -52,27 +63,12 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
       - name: Build & Push
-        working-directory: src
+        working-directory: jobs/HitsProcessor
         run: |
           docker build . --file Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:${{needs.versionize.outputs.semver}}
           docker build . --file Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:${{needs.versionize.outputs.semver}}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
-
-  publish-bicep:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build & Push
-        working-directory: infrastructure
-        run: |
-          bicep build-params main.params.bicepparam 
-          az bicep build --file main.bicep
-      - name: Publish Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: bicep-templates
-          path: infrastructure/*.json
 
   infrastructure-incremental:
     needs: [build, publish-bicep, versionize]
@@ -95,4 +91,4 @@ jobs:
         id: arm
         uses: Azure/cli@v1
         with:
-          inlineScript: az deployment sub create --name tinylink-hits-northeurope  --location northeurope --template-file ./infrastructure/main.json --parameters ./infrastructure/main.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
+          inlineScript: az deployment sub create --name tinylink-hits-proc-northeurope --location northeurope --template-file ./infrastructure/main.json --parameters ./infrastructure/main.params.json --parameters containerVersion=${{needs.versionize.outputs.semver}}
