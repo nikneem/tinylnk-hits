@@ -108,7 +108,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
             }
             {
               name: 'QueueName'
-              secretRef: serviceBus::queue.name
+              value: serviceBus::queue.name
             }
             {
               name: 'StorageAccountName'
