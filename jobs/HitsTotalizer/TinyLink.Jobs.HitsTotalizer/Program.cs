@@ -51,43 +51,43 @@ if (entities.Count == 0)
     return 0;
 }
 
-//var withTimeStamp = entities.Where(ent => ent.Timestamp.HasValue).ToList();
+var withTimeStamp = entities.Where(ent => ent.Timestamp.HasValue).ToList();
 
-//// Getting the totals of all hits awaiting calculation
-//var totalEntities = withTimeStamp.GroupBy(ent => ent.ShortCode).Select(ent =>
-//    new HitTableEntity
-//    {
-//        PartitionKey = "hits",
-//        RowKey = ent.First().ShortCode,
-//        ShortCode = ent.First().ShortCode,
-//        OwnerId = ent.First().OwnerId,
-//        Hits = ent.Count(),
-//    });
+// Getting the totals of all hits awaiting calculation
+var totalEntities = withTimeStamp.GroupBy(ent => ent.ShortCode).Select(ent =>
+    new HitTableEntity
+    {
+        PartitionKey = "hits",
+        RowKey = ent.First().ShortCode,
+        ShortCode = ent.First().ShortCode,
+        OwnerId = ent.First().OwnerId,
+        Hits = ent.Count(),
+    });
 
-//var totalCounterTransaction = new List<TableTransactionAction>();
-//foreach (var entity in totalEntities)
-//{
-//    Console.WriteLine($"Adding up totals, for {entity.ShortCode} processing {entity.Hits} hits");
+var totalCounterTransaction = new List<TableTransactionAction>();
+foreach (var entity in totalEntities)
+{
+    Console.WriteLine($"Adding up totals, for {entity.ShortCode} processing {entity.Hits} hits");
 
-//    var totalHitsEntity = new HitTableEntity
-//    {
-//        PartitionKey = "total",
-//        RowKey = entity.ShortCode,
-//        ShortCode = entity.ShortCode,
-//        OwnerId = entity.OwnerId,
-//        Hits = entity.Hits,
-//        Timestamp = entity.Timestamp,
-//    };
-//    var existingEntity = await tableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey, cancellationToken: CancellationToken.None);
-//    if (existingEntity.HasValue)
-//    {
-//        Console.WriteLine($"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
-//        totalHitsEntity.Hits += existingEntity.Value.Hits;
-//        Console.WriteLine($"Added up to a new total of {totalHitsEntity.Hits}");
-//    }
+    var totalHitsEntity = new HitTableEntity
+    {
+        PartitionKey = "total",
+        RowKey = entity.ShortCode,
+        ShortCode = entity.ShortCode,
+        OwnerId = entity.OwnerId,
+        Hits = entity.Hits,
+        Timestamp = entity.Timestamp,
+    };
+    var existingEntity = await tableClient.GetEntityAsync<HitTableEntity>("hits", entity.RowKey, cancellationToken: CancellationToken.None);
+    if (existingEntity.HasValue)
+    {
+        Console.WriteLine($"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
+        totalHitsEntity.Hits += existingEntity.Value.Hits;
+        Console.WriteLine($"Added up to a new total of {totalHitsEntity.Hits}");
+    }
 
-//    totalCounterTransaction.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, totalHitsEntity));
-//}
+    totalCounterTransaction.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, totalHitsEntity));
+}
 
 //if (totalCounterTransaction.Count > 0)
 //{
