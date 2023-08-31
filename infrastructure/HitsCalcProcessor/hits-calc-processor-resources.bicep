@@ -63,10 +63,10 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
       triggerType: 'Event'
       eventTriggerConfig: {
         replicaCompletionCount: 1
-        parallelism: 1
+        parallelism: 30
         scale: {
           minExecutions: 0
-          maxExecutions: 10
+          maxExecutions: 100
           pollingInterval: 30
           rules: [
             {
