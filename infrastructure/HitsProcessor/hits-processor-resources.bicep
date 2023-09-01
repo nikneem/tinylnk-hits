@@ -76,6 +76,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
                 {
                   queueName: serviceBus::queue.name
                   connection: 'servicebus-connection-string'
+                  messageCount: 1
                 }
               )
               auth: [
