@@ -64,7 +64,6 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
       eventTriggerConfig: {
         replicaCompletionCount: 1
         parallelism: 1
-        messageCount: 1
         scale: {
           minExecutions: 0
           maxExecutions: 100
@@ -77,6 +76,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
                 {
                   queueName: serviceBus::queue.name
                   connection: 'servicebus-connection-string'
+                  messageCount: 1
                 }
               )
               auth: [
