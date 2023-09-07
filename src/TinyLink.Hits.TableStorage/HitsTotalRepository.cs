@@ -16,7 +16,7 @@ public class HitsTotalRepository : IHitsTotalRepository
 
     public async Task<HitsTotalDto> GetAsync(string ownerId, string shortCode, CancellationToken cancellationToken)
     {
-        var pollsQuery = _tableClient.QueryAsync<HitTableEntity>($"{nameof(HitTableEntity.PartitionKey)} eq '{ownerId}' and {nameof(HitTableEntity.RowKey)} eq '{shortCode}'");
+        var pollsQuery = _tableClient.QueryAsync<HitTableEntity>($"{nameof(HitTableEntity.PartitionKey)} eq 'total' and {nameof(HitTableEntity.RowKey)} eq '{shortCode}' and {nameof(HitTableEntity.OwnerId)} eq '{ownerId}'");
         await foreach (var queryPage in pollsQuery.AsPages().WithCancellation(cancellationToken))
         {
             foreach (var value in queryPage.Values)
