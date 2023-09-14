@@ -96,18 +96,16 @@ foreach (var entity in totalEntities)
     }
 
     totalCounterTransaction.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, totalHitsEntity));
-    if (totalCounterTransaction.Count >= 90)
-    {
-        Console.WriteLine($"Submitting a transaction of {totalCounterTransaction.Count} operations for UpsertReplace of total counts");
-        await totalTableClient.SubmitTransactionAsync(totalCounterTransaction, CancellationToken.None);
-        totalCounterTransaction = new List<TableTransactionAction>();
-    }
 }
 
-if (totalCounterTransaction.Count > 0)
+if (totalCounterTransaction.Any())
 {
-    Console.WriteLine($"Submitting a transaction of {totalCounterTransaction.Count} operations for UpsertReplace of total counts");
-    await totalTableClient.SubmitTransactionAsync(totalCounterTransaction, CancellationToken.None);
+    foreach (var chunk in totalCounterTransaction.Chunk(100))
+    {
+        Console.WriteLine(
+            $"Submitting a transaction of {chunk.Count()} operations for UpsertReplace of total counts");
+        await totalTableClient.SubmitTransactionAsync(chunk, CancellationToken.None);
+    }
 }
 
 Console.WriteLine($"Total hits calculation complete, now working on ten minute accumulatives");
@@ -161,19 +159,17 @@ if (tenMinutesAccumulatedEntities.Count > 0)
 var deleteTransactions = new List<TableTransactionAction>();
 foreach (var entity in entities)
 {
+    Console.WriteLine($"Deleting Partition {entity.PartitionKey} and Row Key {entity.RowKey}");
     deleteTransactions.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
-    if (deleteTransactions.Count >= 90)
-    {
-        Console.WriteLine($"Submitting a transaction of {deleteTransactions.Count} operations for delete");
-        await totalTableClient.SubmitTransactionAsync(deleteTransactions, CancellationToken.None);
-        deleteTransactions = new List<TableTransactionAction>();
-    }
 }
 
 if (deleteTransactions.Any())
 {
-    await tableClient.SubmitTransactionAsync(deleteTransactions);
+    foreach (var chunk in deleteTransactions.Chunk(100))
+    {
+        Console.WriteLine($"Submitting batch of {chunk.Count()} original hit entries for delete");
+        await tableClient.SubmitTransactionAsync(chunk);
+    }
 }
 
 return 0;
-
