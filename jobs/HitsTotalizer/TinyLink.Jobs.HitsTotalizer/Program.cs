@@ -96,6 +96,12 @@ foreach (var entity in totalEntities)
     }
 
     totalCounterTransaction.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, totalHitsEntity));
+    if (totalCounterTransaction.Count >= 90)
+    {
+        Console.WriteLine($"Submitting a transaction of {totalCounterTransaction.Count} operations for UpsertReplace of total counts");
+        await totalTableClient.SubmitTransactionAsync(totalCounterTransaction, CancellationToken.None);
+        totalCounterTransaction = new List<TableTransactionAction>();
+    }
 }
 
 if (totalCounterTransaction.Count > 0)
@@ -156,6 +162,12 @@ var deleteTransactions = new List<TableTransactionAction>();
 foreach (var entity in entities)
 {
     deleteTransactions.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
+    if (deleteTransactions.Count >= 90)
+    {
+        Console.WriteLine($"Submitting a transaction of {deleteTransactions.Count} operations for delete");
+        await totalTableClient.SubmitTransactionAsync(deleteTransactions, CancellationToken.None);
+        deleteTransactions = new List<TableTransactionAction>();
+    }
 }
 
 if (deleteTransactions.Any())
