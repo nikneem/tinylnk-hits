@@ -159,7 +159,6 @@ if (tenMinutesAccumulatedEntities.Count > 0)
 var deleteTransactions = new List<TableTransactionAction>();
 foreach (var entity in entities)
 {
-    Console.WriteLine($"Deleting Partition {entity.PartitionKey} and Row Key {entity.RowKey}");
     deleteTransactions.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
 }
 
