@@ -22,7 +22,7 @@ public class CalculateHitsRepository : ICalculateHitsRepository
         }
         var voteEntity = new HitTableEntity
         {
-            PartitionKey = domainModel.Id.ToString(),
+            PartitionKey = domainModel.ShortCodeId.ToString(),
             RowKey = Guid.NewGuid().ToString(),
             ShortCode = domainModel.ShortCode,
             OwnerId = domainModel.OwnerId,
