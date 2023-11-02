@@ -116,11 +116,11 @@ resource apiContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
           value: containerRegistry.listCredentials().passwords[0].value
         }
         {
-          name: 'ServiceBusConnectionString'
+          name: 'servicebusconnectionstring'
           value: serviceBusConnectionString
         }
         {
-          name: 'AzureWebJobsStorage'
+          name: 'storageaccountconnectionstring'
           value: storageAccountConnectionString
         }
       ]
@@ -142,7 +142,7 @@ resource apiContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
           env: [
             {
               name: 'AzureWebJobsStorage'
-              secretRef: 'AzureWebJobsStorage'
+              secretRef: 'storageaccountconnectionstring'
             }
             {
               name: 'FUNCTIONS_WORKER_RUNTIME'
@@ -154,7 +154,7 @@ resource apiContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
             }
             {
               name: 'ServiceBus'
-              secretRef: 'ServiceBusConnectionString'
+              secretRef: 'servicebusconnectionstring'
             }
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
