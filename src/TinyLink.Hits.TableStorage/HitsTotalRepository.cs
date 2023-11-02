@@ -31,8 +31,9 @@ public class HitsTotalRepository : IHitsTotalRepository
 
     public HitsTotalRepository(IOptions<AzureCloudConfiguration> config)
     {
+        var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
         var identity = CloudIdentity.GetChainedTokenCredential();
-        var storageAccountUrl = new Uri($"https://{config.Value.StorageAccountName}.table.core.windows.net");
+        var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
         _tableClient = new TableClient(storageAccountUrl, TableName, identity);
     }
     public HitsTotalRepository(TableClient tableClient)

@@ -12,6 +12,7 @@ public static class ServiceCollectionExtensions
         services.AddTinyLinkHits();
         services.AddScoped<IRawHitsRepository, RawHitsRepository>();
         services.AddScoped<ICalculateHitsRepository, CalculateHitsRepository>();
+        services.AddScoped<IHitsTotalRepository, HitsTotalRepository>();
         return services;
     }
 
