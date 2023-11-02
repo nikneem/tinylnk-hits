@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="DomainModels\" />
     <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HexMaster.DomainDrivenDesign" Version="2.0.5" />
+    <PackageReference Include="TinyLink.Core" Version="0.1.8" />
   </ItemGroup>
 
 </Project>

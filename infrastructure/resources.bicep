@@ -9,7 +9,9 @@ param serviceBusName string
 var systemName = 'tinylnk-hits'
 var defaultResourceName = '${systemName}-ne'
 var containerRegistryPasswordSecretRef = 'container-registry-password'
-
+var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
+var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
+var storageAccountConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
 var tables = [
   'hits'
   'hitsforcalculation'
@@ -21,14 +23,9 @@ var hitsQueueNames = [
   'hitscumulatorqueue'
 ]
 
-var apiHostName = 'hits.tinylnk.nl'
-
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-04-01-preview' existing = {
   name: containerAppEnvironmentName
   scope: resourceGroup(integrationResourceGroupName)
-  resource apiCert 'managedCertificates' existing = {
-    name: '${replace(apiHostName, '.', '-')}-cert'
-  }
 }
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-12-01' existing = {
   name: containerRegistryName
@@ -112,18 +109,19 @@ resource apiContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
             'OPTIONS'
           ]
         }
-        customDomains: [
-          {
-            name: apiHostName
-            bindingType: 'SniEnabled'
-            certificateId: containerAppEnvironment::apiCert.id
-          }
-        ]
       }
       secrets: [
         {
           name: containerRegistryPasswordSecretRef
           value: containerRegistry.listCredentials().passwords[0].value
+        }
+        {
+          name: 'ServiceBusConnectionString'
+          value: serviceBusConnectionString
+        }
+        {
+          name: 'AzureWebJobsStorage'
+          value: storageAccountConnectionString
         }
       ]
       maxInactiveRevisions: 1
@@ -143,12 +141,20 @@ resource apiContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
           image: '${containerRegistry.properties.loginServer}/${systemName}:${containerVersion}'
           env: [
             {
-              name: 'Azure__StorageAccountName'
+              name: 'AzureWebJobsStorage'
+              secretRef: 'AzureWebJobsStorage'
+            }
+            {
+              name: 'FUNCTIONS_WORKER_RUNTIME'
+              value: 'dotnet-isolated'
+            }
+            {
+              name: 'StorageAccountName'
               value: storageAccount.name
             }
             {
-              name: 'Azure__ServiceBusName'
-              value: serviceBus.name
+              name: 'ServiceBus'
+              secretRef: 'ServiceBusConnectionString'
             }
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'

@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.Data.Tables;
 using Azure.Identity;
+using TinyLink.Core.Helpers;
 using TinyLink.Hits.Abstractions.Repositories;
 using TinyLink.Hits.TableStorage.Entities;
 
@@ -16,11 +17,11 @@ public class HitsRepository : IHitsRepository
     private const string TableName = "hits";
     private readonly TableClient _tableClient;
 
-    public async Task<bool> CreateAsync(string ownerId, string shortCode, DateTimeOffset createdOn)
+    public async Task<bool> CreateAsync(Guid id, string ownerId, string shortCode, DateTimeOffset createdOn)
     {
         var voteEntity = new HitTableEntity
         {
-            PartitionKey = HitPartitionKey,
+            PartitionKey = id.ToString(),
             RowKey = Guid.NewGuid().ToString(),
             ShortCode = shortCode,
             OwnerId = ownerId,
@@ -161,7 +162,7 @@ public class HitsRepository : IHitsRepository
 
     public HitsRepository(string storageAccountName)
     {
-        var identity = new ManagedIdentityCredential();
+        var identity = CloudIdentity.GetChainedTokenCredential();
         var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
         _tableClient = new TableClient(storageAccountUrl, TableName, identity);
     }

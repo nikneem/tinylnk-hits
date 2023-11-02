@@ -10,7 +10,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddTinyLinkHitsWithTableStorage(this IServiceCollection services)
     {
         services.AddTinyLinkHits();
-        services.AddScoped<IHitsTotalRepository, HitsTotalRepository>();
+        services.AddScoped<IRawHitsRepository, RawHitsRepository>();
+        services.AddScoped<ICalculateHitsRepository, CalculateHitsRepository>();
         return services;
     }
 
