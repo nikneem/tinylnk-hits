@@ -115,12 +115,11 @@ foreach (var entity in totalEntities)
     try
     {
         Console.WriteLine($"Sending out service bus messate for short code {totalHitsEntity.PartitionKey} ({totalHitsEntity.ShortCode})");
-        var command = new ProcessHitCommand(
+        var command = new TotalHitsChangedCommand(
             Guid.Parse(totalHitsEntity.PartitionKey),
             totalHitsEntity.ShortCode,
             totalHitsEntity.OwnerId,
-            totalHitsEntity.Hits,
-            DateTimeOffset.UtcNow);
+            totalHitsEntity.Hits);
         await serviceBusSender.SendMessageAsync(command.ToServiceBusMessage(), CancellationToken.None);
     }
     catch (Exception ex)
