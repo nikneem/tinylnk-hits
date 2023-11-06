@@ -21,7 +21,6 @@ var tables = [
 var hitsQueueNames = [
   'hitsprocessorqueue'
   'hitscumulatorqueue'
-  'hitscalculationscompleted'
 ]
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-04-01-preview' existing = {
