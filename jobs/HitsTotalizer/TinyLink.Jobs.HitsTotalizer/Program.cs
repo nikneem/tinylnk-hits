@@ -37,7 +37,7 @@ var tableClient = new TableClient(storageAccountUrl, sourceTableName, identity);
 var tenMinutesTableClient = new TableClient(storageAccountUrl, tenMinutesTableName, identity);
 var totalTableClient = new TableClient(storageAccountUrl, totalTableName, identity);
 
-var hitsQuery = tableClient.QueryAsync<HitTableEntity>($"{nameof(HitTableEntity.PartitionKey)} eq 'hit'");
+var hitsQuery = tableClient.QueryAsync<HitTableEntity>();
 var entities = new List<HitTableEntity>();
 Console.WriteLine("Downloading unprocessed hits from calculation table");
 
@@ -56,10 +56,10 @@ if (entities.Count == 0)
 var withTimeStamp = entities.Where(ent => ent.Timestamp.HasValue).ToList();
 
 // Getting the totals of all hits awaiting calculation
-var totalEntities = withTimeStamp.GroupBy(ent => ent.ShortCode).Select(ent =>
+var totalEntities = withTimeStamp.GroupBy(ent => ent.PartitionKey).Select(ent =>
     new HitTableEntity
     {
-        PartitionKey = "hits",
+        PartitionKey = ent.First().PartitionKey,
         RowKey = ent.First().ShortCode,
         ShortCode = ent.First().ShortCode,
         OwnerId = ent.First().OwnerId,
@@ -73,8 +73,8 @@ foreach (var entity in totalEntities)
 
     var totalHitsEntity = new HitTableEntity
     {
-        PartitionKey = "total",
-        RowKey = entity.ShortCode,
+        PartitionKey = entity.PartitionKey,
+        RowKey = entity.PartitionKey,
         ShortCode = entity.ShortCode,
         OwnerId = entity.OwnerId,
         Hits = entity.Hits,
@@ -82,7 +82,7 @@ foreach (var entity in totalEntities)
     };
     try
     {
-        var existingEntity = await totalTableClient.GetEntityAsync<HitTableEntity>("total", entity.RowKey, cancellationToken: CancellationToken.None);
+        var existingEntity = await totalTableClient.GetEntityAsync<HitTableEntity>(entity.PartitionKey, entity.PartitionKey, cancellationToken: CancellationToken.None);
         if (existingEntity.HasValue)
         {
             Console.WriteLine($"Shortcode {entity.ShortCode} already had total cumulative of {existingEntity.Value.Hits}");
@@ -135,7 +135,7 @@ do
     tenMinutesAccumulatedEntities.AddRange( currentBatch.GroupBy(ent => ent.ShortCode).Select(ent =>
         new HitTableEntity
         {
-            PartitionKey = ent.First().ShortCode,
+            PartitionKey = ent.First().PartitionKey,
             RowKey = minDate.ToString("yyyyMMddHHmm"),
             ShortCode = ent.First().ShortCode,
             OwnerId = ent.First().OwnerId,
