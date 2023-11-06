@@ -7,6 +7,7 @@ var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName"
 var sourceTableName = Environment.GetEnvironmentVariable("StorageSourceTableName");
 var tenMinutesTableName = Environment.GetEnvironmentVariable("StorageTenMinutesTableName");
 var totalTableName = Environment.GetEnvironmentVariable("StorageTotalTableName");
+var serviceBusName = Environment.GetEnvironmentVariable("ServiceBusName");
 
 if (string.IsNullOrWhiteSpace(storageAccountName))
 {
@@ -26,6 +27,11 @@ if (string.IsNullOrWhiteSpace(tenMinutesTableName))
 if (string.IsNullOrWhiteSpace(totalTableName))
 {
     Console.WriteLine("Total table name not configured properly");
+    return -4;
+}
+if (string.IsNullOrWhiteSpace(serviceBusName))
+{
+    Console.WriteLine("The name of the Azure Service Bus should have been configured");
     return -4;
 }
 
@@ -92,7 +98,7 @@ foreach (var entity in totalEntities)
     }
     catch (Exception ex)
     {
-        Console.WriteLine( ex.Message );
+        Console.WriteLine(ex.Message);
     }
 
     totalCounterTransaction.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, totalHitsEntity));
@@ -132,7 +138,7 @@ do
     var maxDate = minDate.AddMinutes(10);
     var currentBatch = withTimeStamp.Where(ent => ent.Timestamp >= minDate && ent.Timestamp <= maxDate);
 
-    tenMinutesAccumulatedEntities.AddRange( currentBatch.GroupBy(ent => ent.ShortCode).Select(ent =>
+    tenMinutesAccumulatedEntities.AddRange(currentBatch.GroupBy(ent => ent.ShortCode).Select(ent =>
         new HitTableEntity
         {
             PartitionKey = ent.First().PartitionKey,
