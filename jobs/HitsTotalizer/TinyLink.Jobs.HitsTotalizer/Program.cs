@@ -1,4 +1,5 @@
-﻿using Azure.Data.Tables;
+﻿using Azure;
+using Azure.Data.Tables;
 using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using TinyLink.Core.Commands.CommandMessages;
@@ -81,10 +82,10 @@ var totalEntities = withTimeStamp.GroupBy(ent => ent.PartitionKey).Select(ent =>
         Hits = ent.Count(),
     });
 
-var totalCounterTransaction = new List<TableTransactionAction>();
 
 foreach (var entity in totalEntities)
 {
+    var totalCounterTransaction = new List<TableTransactionAction>();
     Console.WriteLine($"Adding up totals, for {entity.ShortCode} processing {entity.Hits} hits");
 
     var totalHitsEntity = new HitTableEntity
@@ -124,17 +125,18 @@ foreach (var entity in totalEntities)
     }
 
     totalCounterTransaction.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, totalHitsEntity));
-}
-
-if (totalCounterTransaction.Any())
-{
-    foreach (var chunk in totalCounterTransaction.Chunk(100))
+    if (totalCounterTransaction.Any())
     {
-        Console.WriteLine(
-            $"Submitting a transaction of {chunk.Count()} operations for UpsertReplace of total counts");
-        await totalTableClient.SubmitTransactionAsync(chunk, CancellationToken.None);
+        foreach (var chunk in totalCounterTransaction.Chunk(100))
+        {
+            Console.WriteLine(
+                $"Submitting a transaction of {chunk.Count()} operations for UpsertReplace of total counts");
+            await totalTableClient.SubmitTransactionAsync(chunk, CancellationToken.None);
+        }
     }
 }
+
+
 
 Console.WriteLine($"Total hits calculation complete, now working on ten minute accumulatives");
 
@@ -154,9 +156,9 @@ var minDate = new DateTimeOffset(
     TimeSpan.Zero);
 Console.WriteLine($"Calculated to logical chunk of min date {minDate}");
 
-var tenMinutesAccumulatedEntities = new List<HitTableEntity>();
 do
 {
+    var tenMinutesAccumulatedEntities = new List<HitTableEntity>();
     var maxDate = minDate.AddMinutes(10);
     var currentBatch = withTimeStamp.Where(ent => ent.Timestamp >= minDate && ent.Timestamp <= maxDate);
 
@@ -171,32 +173,23 @@ do
         }));
 
     minDate = minDate.AddMinutes(10);
+    if (tenMinutesAccumulatedEntities.Count > 0)
+    {
+        Console.WriteLine($"Submitting batch of {tenMinutesAccumulatedEntities.Count} ten-minute accumulation operations.");
+        foreach (var entity in tenMinutesAccumulatedEntities)
+        {
+            await tenMinutesTableClient.UpsertEntityAsync(entity, TableUpdateMode.Replace, CancellationToken.None);
+        }
+    }
+
 } while (minDate < DateTimeOffset.UtcNow);
 
-if (tenMinutesAccumulatedEntities.Count > 0)
-{
-    Console.WriteLine($"Submitting batch of {tenMinutesAccumulatedEntities.Count} ten-minute accumulation operations.");
-    foreach (var entity in tenMinutesAccumulatedEntities)
-    {
-        await tenMinutesTableClient.UpsertEntityAsync(entity, TableUpdateMode.Replace, CancellationToken.None);
-    }
-}
 
 
 
-var deleteTransactions = new List<TableTransactionAction>();
 foreach (var entity in entities)
 {
-    deleteTransactions.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
-}
-
-if (deleteTransactions.Any())
-{
-    foreach (var chunk in deleteTransactions.Chunk(100))
-    {
-        Console.WriteLine($"Submitting batch of {chunk.Count()} original hit entries for delete");
-        await tableClient.SubmitTransactionAsync(chunk);
-    }
+    await tableClient.DeleteEntityAsync(entity.PartitionKey, entity.RowKey, ETag.All, CancellationToken.None);
 }
 
 return 0;
