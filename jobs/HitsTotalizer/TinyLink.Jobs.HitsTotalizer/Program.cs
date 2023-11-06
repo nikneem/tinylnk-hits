@@ -1,5 +1,8 @@
 ﻿using Azure.Data.Tables;
 using Azure.Identity;
+using Azure.Messaging.ServiceBus;
+using TinyLink.Core.Commands.CommandMessages;
+using TinyLink.Core.ExtensionMethods;
 using TinyLink.Jobs.HitsTotalizer.Entities;
 
 Console.WriteLine("Starting the hits total accumulation job");
@@ -8,6 +11,7 @@ var sourceTableName = Environment.GetEnvironmentVariable("StorageSourceTableName
 var tenMinutesTableName = Environment.GetEnvironmentVariable("StorageTenMinutesTableName");
 var totalTableName = Environment.GetEnvironmentVariable("StorageTotalTableName");
 var serviceBusName = Environment.GetEnvironmentVariable("ServiceBusName");
+var serviceBusQueue = Environment.GetEnvironmentVariable("ServiceBusQueue");
 
 if (string.IsNullOrWhiteSpace(storageAccountName))
 {
@@ -35,6 +39,8 @@ if (string.IsNullOrWhiteSpace(serviceBusName))
     return -4;
 }
 
+
+
 Console.WriteLine("Configuration fine, retrieving hits from source table");
 
 var identity = new ManagedIdentityCredential();
@@ -42,6 +48,9 @@ var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.window
 var tableClient = new TableClient(storageAccountUrl, sourceTableName, identity);
 var tenMinutesTableClient = new TableClient(storageAccountUrl, tenMinutesTableName, identity);
 var totalTableClient = new TableClient(storageAccountUrl, totalTableName, identity);
+var serviceBusFqdn = $"{serviceBusName}.servicebus.windows.net";
+var serviceBusClient = new ServiceBusClient(serviceBusFqdn, identity);
+var serviceBusSender = serviceBusClient.CreateSender(serviceBusQueue);
 
 var hitsQuery = tableClient.QueryAsync<HitTableEntity>();
 var entities = new List<HitTableEntity>();
@@ -73,6 +82,7 @@ var totalEntities = withTimeStamp.GroupBy(ent => ent.PartitionKey).Select(ent =>
     });
 
 var totalCounterTransaction = new List<TableTransactionAction>();
+
 foreach (var entity in totalEntities)
 {
     Console.WriteLine($"Adding up totals, for {entity.ShortCode} processing {entity.Hits} hits");
@@ -95,6 +105,18 @@ foreach (var entity in totalEntities)
             totalHitsEntity.Hits += existingEntity.Value.Hits;
             Console.WriteLine($"Added up to a new total of {totalHitsEntity.Hits}");
         }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.Message);
+    }
+
+    try
+    {
+        Console.WriteLine($"Sending out service bus messate for short code {totalHitsEntity.PartitionKey} ({totalHitsEntity.ShortCode})");
+        var command = new ProcessHitCommand(Guid.Parse(totalHitsEntity.PartitionKey), totalHitsEntity.ShortCode,
+            totalHitsEntity.OwnerId, DateTimeOffset.UtcNow);
+        await serviceBusSender.SendMessageAsync(command.ToServiceBusMessage(), CancellationToken.None);
     }
     catch (Exception ex)
     {
