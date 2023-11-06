@@ -91,6 +91,10 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
               name: 'ServiceBusName'
               value: serviceBusName
             }
+            {
+              name: 'ServiceBusQueue'
+              value: 'hitscalculationscompleted'
+            }
           ]
           resources: {
             cpu: json('0.25')
