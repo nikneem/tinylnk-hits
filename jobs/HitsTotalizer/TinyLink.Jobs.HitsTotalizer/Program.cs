@@ -114,7 +114,7 @@ foreach (var entity in totalEntities)
 
     try
     {
-        Console.WriteLine($"Sending out service bus messate for short code {totalHitsEntity.PartitionKey} ({totalHitsEntity.ShortCode})");
+        Console.WriteLine($"Sending out service bus messate for short code {totalHitsEntity.PartitionKey} ({totalHitsEntity.ShortCode}) with a {totalHitsEntity.Hits} hitcount");
         var command = new TotalHitsChangedCommand(
             Guid.Parse(totalHitsEntity.PartitionKey),
             totalHitsEntity.ShortCode,
