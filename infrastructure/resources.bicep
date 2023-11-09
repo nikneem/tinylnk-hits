@@ -7,7 +7,7 @@ param applicationInsightsName string
 param serviceBusName string
 
 var systemName = 'tinylnk-hits'
-var functionsSystemName = 'tinylnk-func'
+var functionsSystemName = 'tinylnk-hits-func'
 
 var defaultResourceName = '${systemName}-ne'
 var functionDefaultResourceName = '${functionsSystemName}-ne'
