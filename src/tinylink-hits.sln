@@ -9,11 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyLink.Hits.Abstractions"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyLink.Hits", "TinyLink.Hits\TinyLink.Hits.csproj", "{66AFA04A-D959-4267-A4A5-444FE7967BA6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Jobs", "Jobs", "{81D57CC6-8364-40F1-8B67-4AF5412E35BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyLink.Hits.Functions", "TinyLink.Hits.Functions\TinyLink.Hits.Functions.csproj", "{1C280363-0BB2-434D-B6E7-6ACA7A8337E6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyLink.Jobs.HitsProcessor", "..\jobs\HitsProcessor\TinyLink.Jobs.HitsProcessor\TinyLink.Jobs.HitsProcessor.csproj", "{37FB153F-8919-4B7C-82C8-0E472901E90A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyLink.Hits.Functions", "TinyLink.Hits.Functions\TinyLink.Hits.Functions.csproj", "{1C280363-0BB2-434D-B6E7-6ACA7A8337E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyLink.Hits.Api", "TinyLink.Hits.Api\TinyLink.Hits.Api.csproj", "{64D5A9E7-EF98-4461-96AA-4294D0D0F0F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,20 +31,17 @@ Global
 		{66AFA04A-D959-4267-A4A5-444FE7967BA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66AFA04A-D959-4267-A4A5-444FE7967BA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66AFA04A-D959-4267-A4A5-444FE7967BA6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37FB153F-8919-4B7C-82C8-0E472901E90A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37FB153F-8919-4B7C-82C8-0E472901E90A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37FB153F-8919-4B7C-82C8-0E472901E90A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37FB153F-8919-4B7C-82C8-0E472901E90A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1C280363-0BB2-434D-B6E7-6ACA7A8337E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1C280363-0BB2-434D-B6E7-6ACA7A8337E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C280363-0BB2-434D-B6E7-6ACA7A8337E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C280363-0BB2-434D-B6E7-6ACA7A8337E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64D5A9E7-EF98-4461-96AA-4294D0D0F0F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64D5A9E7-EF98-4461-96AA-4294D0D0F0F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64D5A9E7-EF98-4461-96AA-4294D0D0F0F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64D5A9E7-EF98-4461-96AA-4294D0D0F0F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{37FB153F-8919-4B7C-82C8-0E472901E90A} = {81D57CC6-8364-40F1-8B67-4AF5412E35BE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D711FEA8-1801-4B5B-80B4-8027891F43AA}

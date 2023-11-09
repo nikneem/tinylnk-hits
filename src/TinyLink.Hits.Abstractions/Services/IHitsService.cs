@@ -8,6 +8,9 @@ public interface IHitsService
     Task<bool> RawHitsProcessor(ProcessHitCommand command, CancellationToken cancellationToken = default);
     Task<bool> CalculateHitsProcessor(ProcessHitCommand command, CancellationToken cancellationToken = default);
 
+    Task<List<CumulatedHitDto>> GetCumulatedHits(Guid id, string ownerId, DateTimeOffset startDate,
+        CancellationToken cancellationToken = default);
+
     Task<HitsTotalDto> GetHitsTotalAsync(
         string shortCode, 
         string ownerId,

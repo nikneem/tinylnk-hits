@@ -1,6 +1,8 @@
 ﻿using Azure;
 using Azure.Data.Tables;
 using HexMaster.DomainDrivenDesign.ChangeTracking;
+using Microsoft.Extensions.Options;
+using TinyLink.Core.Configuration;
 using TinyLink.Core.Helpers;
 using TinyLink.Hits.Abstractions.DomainModels;
 using TinyLink.Hits.Abstractions.Repositories;
@@ -34,9 +36,10 @@ public class CalculateHitsRepository : ICalculateHitsRepository
         return !response.IsError;
     }
 
-    public CalculateHitsRepository()
+    public CalculateHitsRepository(IOptions<AzureCloudConfiguration> config)
     {
-        var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
+        var storageAccountName =
+            Environment.GetEnvironmentVariable("StorageAccountName") ?? config.Value.StorageAccountName;
         var identity = CloudIdentity.GetChainedTokenCredential();
         var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
         _tableClient = new TableClient(storageAccountUrl, TableName, identity);

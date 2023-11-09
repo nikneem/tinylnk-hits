@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="HexMaster.DomainDrivenDesign" Version="2.0.5" />
-    <PackageReference Include="TinyLink.Core" Version="0.1.8" />
+    <PackageReference Include="TinyLink.Core" Version="0.1.11" />
   </ItemGroup>
 
 </Project>

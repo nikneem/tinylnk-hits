@@ -10,12 +10,13 @@ namespace TinyLink.Hits.Api.Controllers
     {
         private readonly IHitsService _hitsService;
 
-        [HttpGet("{shortCode}/total")]
-        public async Task<IActionResult> GetTotal(string shortCode, CancellationToken cancellationToken)
+        [HttpGet("{id:guid}/cumulated")]
+        public async Task<IActionResult> GetCumulated(Guid id, [FromQuery]DateTimeOffset? fromDate, CancellationToken cancellationToken)
         {
             var ownerId = GetSubjectId();
-            var responseDto = await _hitsService.GetHitsTotalAsync(shortCode, ownerId, cancellationToken);
-            return Ok(responseDto);
+            var sanitizedFromDate = fromDate.HasValue ?  fromDate.Value : DateTimeOffset.UtcNow.AddDays(-7);
+            var response = await _hitsService.GetCumulatedHits(id, ownerId, sanitizedFromDate, cancellationToken);
+            return Ok(response);
         }
 
         public HitsController(IHitsService hitsService)

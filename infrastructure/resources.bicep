@@ -7,6 +7,8 @@ param applicationInsightsName string
 param serviceBusName string
 
 var systemName = 'tinylnk-hits'
+var functionsSystemName = 'tinylnk-func'
+
 var defaultResourceName = '${systemName}-ne'
 var containerRegistryPasswordSecretRef = 'container-registry-password'
 var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
@@ -184,31 +186,84 @@ resource apiContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
     }
   }
 }
+resource functionsContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
+  name: '${defaultResourceName}-func-ca'
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    environmentId: containerAppEnvironment.id
+    managedEnvironmentId: containerAppEnvironment.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      dapr: {
+        enabled: false
+      }
+      secrets: [
+        {
+          name: containerRegistryPasswordSecretRef
+          value: containerRegistry.listCredentials().passwords[0].value
+        }
+        {
+          name: 'servicebusconnectionstring'
+          value: serviceBusConnectionString
+        }
+        {
+          name: 'storageaccountconnectionstring'
+          value: storageAccountConnectionString
+        }
+      ]
+      maxInactiveRevisions: 1
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          username: containerRegistry.properties.adminUserEnabled ? containerRegistry.name : null
+          passwordSecretRef: containerRegistryPasswordSecretRef
+        }
+      ]
 
-// module apexCertificateModule 'managedCertificate.bicep' = {
-//   name: 'apexCertificateModule'
-//   scope: resourceGroup(integrationResourceGroupName)
-//   dependsOn: [
-//     apiContainerApp
-//   ]
-//   params: {
-//     hostname: apexHostName
-//     location: location
-//     managedEnvironmentName: containerAppEnvironment.name
-//   }
-// }
-// module apiCertificateModule 'managedCertificate.bicep' = {
-//   name: 'apiCertificateModule'
-//   scope: resourceGroup(integrationResourceGroupName)
-//   dependsOn: [
-//     apiContainerApp
-//   ]
-//   params: {
-//     hostname: apiHostName
-//     location: location
-//     managedEnvironmentName: containerAppEnvironment.name
-//   }
-// }
+    }
+    template: {
+      containers: [
+        {
+          name: defaultResourceName
+          image: '${containerRegistry.properties.loginServer}/${systemName}:${containerVersion}'
+          env: [
+            {
+              name: 'AzureWebJobsStorage'
+              secretRef: 'storageaccountconnectionstring'
+            }
+            {
+              name: 'FUNCTIONS_WORKER_RUNTIME'
+              value: 'dotnet-isolated'
+            }
+            {
+              name: 'StorageAccountName'
+              value: storageAccount.name
+            }
+            {
+              name: 'ServiceBus'
+              secretRef: 'servicebusconnectionstring'
+            }
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              value: applicationInsights.properties.ConnectionString
+            }
+          ]
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+      }
+    }
+  }
+}
 
 resource serviceBusDataSenderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39'
@@ -226,10 +281,20 @@ module serviceBusDataSenderRoleAssignment 'roleAssignment.bicep' = {
 resource storageTableDataContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
 }
+
 module storageTableDataContributorRoleAssignment 'roleAssignment.bicep' = {
   name: 'storageTableDataContributorRoleAssignment'
   params: {
     principalId: apiContainerApp.identity.principalId
+    roleDefinitionId: storageTableDataContributorRoleDefinition.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module functionStorageTableDataContributorRoleAssignment 'roleAssignment.bicep' = {
+  name: 'functionStorageTableDataContributorRoleAssignment'
+  params: {
+    principalId: functionsContainerApp.identity.principalId
     roleDefinitionId: storageTableDataContributorRoleDefinition.id
     principalType: 'ServicePrincipal'
   }
