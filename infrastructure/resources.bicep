@@ -228,7 +228,7 @@ resource functionsContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' 
     template: {
       containers: [
         {
-          name: defaultResourceName
+          name: functionDefaultResourceName
           image: '${containerRegistry.properties.loginServer}/${functionsSystemName}:${containerVersion}'
           env: [
             {
