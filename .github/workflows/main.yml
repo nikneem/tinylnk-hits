@@ -11,7 +11,7 @@ on:
 
 env:
   IMAGE_NAME: tinylnk-hits
-  FUNCTIONS_IMAGE_NAME: tinylnk-func
+  FUNCTIONS_IMAGE_NAME: tinylnk-hits-func
 
 permissions:
   id-token: write
