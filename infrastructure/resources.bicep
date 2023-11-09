@@ -10,6 +10,7 @@ var systemName = 'tinylnk-hits'
 var functionsSystemName = 'tinylnk-func'
 
 var defaultResourceName = '${systemName}-ne'
+var functionDefaultResourceName = '${functionsSystemName}-ne'
 var containerRegistryPasswordSecretRef = 'container-registry-password'
 var serviceBusEndpoint = '${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey'
 var serviceBusConnectionString = listKeys(serviceBusEndpoint, serviceBus.apiVersion).primaryConnectionString
@@ -187,7 +188,7 @@ resource apiContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
   }
 }
 resource functionsContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
-  name: '${defaultResourceName}-func-ca'
+  name: '${functionDefaultResourceName}-ca'
   location: location
   identity: {
     type: 'SystemAssigned'
@@ -228,7 +229,7 @@ resource functionsContainerApp 'Microsoft.App/containerApps@2023-04-01-preview' 
       containers: [
         {
           name: defaultResourceName
-          image: '${containerRegistry.properties.loginServer}/${systemName}:${containerVersion}'
+          image: '${containerRegistry.properties.loginServer}/${functionsSystemName}:${containerVersion}'
           env: [
             {
               name: 'AzureWebJobsStorage'
