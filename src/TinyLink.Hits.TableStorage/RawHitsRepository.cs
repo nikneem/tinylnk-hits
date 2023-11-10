@@ -38,8 +38,9 @@ public class RawHitsRepository : IRawHitsRepository
 
     public RawHitsRepository(IOptions<AzureCloudConfiguration> config)
     {
+        var storageAccountName = Environment.GetEnvironmentVariable("StorageAccountName") ?? config.Value.StorageAccountName;
         var identity = CloudIdentity.GetChainedTokenCredential();
-        var storageAccountUrl = new Uri($"https://{config.Value.StorageAccountName}.table.core.windows.net");
+        var storageAccountUrl = new Uri($"https://{storageAccountName}.table.core.windows.net");
         _tableClient = new TableClient(storageAccountUrl, TableName, identity);
     }
 
