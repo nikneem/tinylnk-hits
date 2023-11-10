@@ -29,9 +29,9 @@ namespace TinyLink.Hits.Functions.Functions
             CancellationToken cancellationToken)
 
         {
-            _logger.LogTrace("Incoming hit for {shortCode}", hit.ShortCode);
+            _logger.LogTrace("Incoming hit for calculation ({shortCode})", hit.ShortCode);
             var succeeded = await _hitsService.CalculateHitsProcessor(hit, cancellationToken);
-            _logger.LogInformation("Processing incoming hits succeeded: {succeeded}", succeeded);
+            _logger.LogInformation("Processing incoming hits for calculation succeeded: {succeeded}", succeeded);
         }
     }
 }
