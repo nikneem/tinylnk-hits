@@ -37,7 +37,28 @@ jobs:
         with:
           useConfigFile: true
 
-  build:
+  build-function:
+    needs: [versionize]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: "Push to Azure Container Registry"
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+      - name: Build & Push
+        working-directory: src
+        run: |
+          docker build . --file TinyLink.Hits.Functions/Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$FUNCTIONS_IMAGE_NAME:${{needs.versionize.outputs.semver}}
+          docker build . --file TinyLink.Hits.Functions/Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$FUNCTIONS_IMAGE_NAME:latest
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$FUNCTIONS_IMAGE_NAME:${{needs.versionize.outputs.semver}}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$FUNCTIONS_IMAGE_NAME:latest
+
+  build-api:
     needs: [versionize]
     runs-on: ubuntu-latest
 
@@ -55,12 +76,8 @@ jobs:
         run: |
           docker build . --file Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:${{needs.versionize.outputs.semver}}
           docker build . --file Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
-          docker build . --file TinyLink.Hits.Functions/Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$FUNCTIONS_IMAGE_NAME:${{needs.versionize.outputs.semver}}
-          docker build . --file TinyLink.Hits.Functions/Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/$FUNCTIONS_IMAGE_NAME:latest
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:${{needs.versionize.outputs.semver}}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$FUNCTIONS_IMAGE_NAME:${{needs.versionize.outputs.semver}}
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$FUNCTIONS_IMAGE_NAME:latest
 
   publish-bicep:
     runs-on: ubuntu-latest
@@ -78,7 +95,7 @@ jobs:
           path: infrastructure/*.json
 
   infrastructure-incremental:
-    needs: [build, publish-bicep, versionize]
+    needs: [build-api, build-function, publish-bicep, versionize]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
