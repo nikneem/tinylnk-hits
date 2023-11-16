@@ -8,8 +8,6 @@ var host = new HostBuilder()
     .ConfigureAppConfiguration((context, builder) =>
     {
         builder.AddEnvironmentVariables();
-        var config = builder.Build();
-        Console.WriteLine(config["ServiceBus"]);
     })
     .ConfigureServices(services =>
     {
