@@ -62,7 +62,7 @@ public class HitsService : IHitsService
 
             current = current.AddMinutes(10);
         }
-
+        return cumulatedHitsWithGaps;
     }
 
     public Task<HitsTotalDto> GetHitsTotalAsync(string shortCode, string ownerId, CancellationToken cancellationToken = default)
