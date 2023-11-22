@@ -25,15 +25,44 @@ public class HitsService : IHitsService
         return _calculateHitsRepository.Create(rawHit, cancellationToken);
     }
 
-    public Task<List<CumulatedHitDto>> GetCumulatedHits(Guid id, string ownerId, DateTimeOffset startDate, CancellationToken cancellationToken = default)
+    public async Task<List<CumulatedHitDto>> GetCumulatedHits(Guid id, string ownerId, DateTimeOffset startDate, CancellationToken cancellationToken = default)
     {
-        var timespan = DateTimeOffset.UtcNow - startDate;
+        var roundedMinute = startDate.Minute - startDate.Minute % 10;
+        var minDate = new DateTimeOffset(
+            startDate.Year,
+            startDate.Month,
+            startDate.Day,
+            startDate.Hour,
+            roundedMinute,
+            0,
+            TimeSpan.Zero);
+
+        var timespan = DateTimeOffset.UtcNow - minDate;
         if (timespan.TotalDays > 365)
         {
             throw new Exception("Cannot go that far back");
         }
 
-        return _hitsByTenMinutesRepository.Get(id, ownerId, startDate, cancellationToken);
+        var cumulatedHits = await  _hitsByTenMinutesRepository.Get(id, ownerId, minDate, cancellationToken);
+
+        // Fill the gaps of fetch hits with 0
+        var cumulatedHitsWithGaps = new List<CumulatedHitDto>();
+        var current = minDate;
+        while (current < DateTimeOffset.UtcNow)
+        {
+            var cumulatedHit = cumulatedHits.FirstOrDefault(x => x.dateTime == current);
+            if (cumulatedHit == null)
+            {
+                cumulatedHitsWithGaps.Add(new CumulatedHitDto(current.ToString("yyyyMMddHHmm"), current, 0));
+            }
+            else
+            {
+                cumulatedHitsWithGaps.Add(cumulatedHit);
+            }
+
+            current = current.AddMinutes(10);
+        }
+
     }
 
     public Task<HitsTotalDto> GetHitsTotalAsync(string shortCode, string ownerId, CancellationToken cancellationToken = default)
