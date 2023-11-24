@@ -278,7 +278,7 @@ resource serviceBusDataSenderRoleDefinition 'Microsoft.Authorization/roleDefinit
 }
 module serviceBusDataSenderRoleAssignment 'roleAssignment.bicep' = {
   name: 'serviceBusDataSenderRoleAssignment'
-  scope: resourceGroup(integrationResourceGroupName)
+  scope: resourceGroup(integrationEnvironment.resourceGroupName)
   params: {
     principalId: apiContainerApp.identity.principalId
     roleDefinitionId: serviceBusDataSenderRoleDefinition.id
