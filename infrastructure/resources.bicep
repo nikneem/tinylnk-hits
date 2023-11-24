@@ -2,9 +2,16 @@ param containerVersion string
 param location string
 param integrationResourceGroupName string
 param containerAppEnvironmentName string
-param containerRegistryName string
-param applicationInsightsName string
-param serviceBusName string
+param integrationEnvironment object
+// param integrationEnvironment = {
+//   resourceGroupName: 'mvp-int-env'
+//   containerRegistryName: 'nvv54gsk4pteu'
+//   applicationInsights: 'mvp-int-env-ai'
+//   appConfiguration: 'mvp-int-env-appcfg'
+//   keyVault: 'mvp-int-env-kv'
+//   logAnalytics: 'mvp-int-env-log'
+//   serviceBus: 'mvp-int-env-bus'
+// }
 
 var systemName = 'tinylnk-hits'
 var functionsSystemName = 'tinylnk-hits-func'
@@ -31,20 +38,20 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-04-01-p
   scope: resourceGroup(integrationResourceGroupName)
 }
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-12-01' existing = {
-  name: containerRegistryName
-  scope: resourceGroup(integrationResourceGroupName)
+  name: integrationEnvironment.containerRegistryName
+  scope: resourceGroup(integrationEnvironment.resourceGroupName)
 }
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-  name: applicationInsightsName
-  scope: resourceGroup(integrationResourceGroupName)
+  name: integrationEnvironment.applicationInsights
+  scope: resourceGroup(integrationEnvironment.resourceGroupName)
 }
 resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = {
-  name: serviceBusName
-  scope: resourceGroup(integrationResourceGroupName)
+  name: integrationEnvironment.serviceBus
+  scope: resourceGroup(integrationEnvironment.resourceGroupName)
 }
 module serviceBusQueueModules 'servicebus-queue.bicep' = {
   name: 'serviceBusQueueModules'
-  scope: resourceGroup(integrationResourceGroupName)
+  scope: resourceGroup(integrationEnvironment.resourceGroupName)
   params: {
     serviceBusName: serviceBus.name
     queueNames: hitsQueueNames
@@ -52,7 +59,7 @@ module serviceBusQueueModules 'servicebus-queue.bicep' = {
 }
 module serviceBusTopicsModule 'servicebus-topic.bicep' = {
   name: 'serviceBusTopicsModule'
-  scope: resourceGroup(integrationResourceGroupName)
+  scope: resourceGroup(integrationEnvironment.resourceGroupName)
   params: {
     serviceBusName: serviceBus.name
     topicName: 'hits'
