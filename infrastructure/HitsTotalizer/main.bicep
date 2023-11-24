@@ -3,9 +3,9 @@ targetScope = 'subscription'
 param containerVersion string
 param integrationResourceGroupName string
 param containerAppEnvironmentName string
-param containerRegistryName string
-param serviceBusName string
 param location string = deployment().location
+
+param integrationEnvironment object
 
 var systemName = 'tinylnk-hits'
 var locationAbbreviation = 'ne'
@@ -23,9 +23,8 @@ module hitsProcessorModule 'hits-total-processor-resources.bicep' = {
   params: {
     containerVersion: containerVersion
     location: location
-    serviceBusName: serviceBusName
+    integrationEnvironment: integrationEnvironment
     integrationResourceGroupName: integrationResourceGroupName
     containerAppEnvironmentName: containerAppEnvironmentName
-    containerRegistryName: containerRegistryName
   }
 }

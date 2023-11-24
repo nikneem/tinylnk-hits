@@ -1,17 +1,16 @@
 param containerVersion string
 param integrationResourceGroupName string
 param containerAppEnvironmentName string
-param containerRegistryName string
-param serviceBusName string
 param location string
+param integrationEnvironment object
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-04-01-preview' existing = {
   name: containerAppEnvironmentName
   scope: resourceGroup(integrationResourceGroupName)
 }
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-12-01' existing = {
-  name: containerRegistryName
-  scope: resourceGroup(integrationResourceGroupName)
+  name: integrationEnvironment.containerRegistryName
+  scope: resourceGroup(integrationEnvironment.resourceGroupName)
 }
 resource hitsStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: uniqueString(resourceGroup().name)
@@ -89,7 +88,7 @@ resource hitsProcessorJob 'Microsoft.App/jobs@2023-05-01' = {
             }
             {
               name: 'ServiceBusName'
-              value: serviceBusName
+              value: integrationEnvironment.serviceBus
             }
             {
               name: 'ServiceBusQueue'
@@ -123,7 +122,7 @@ resource serviceBusDataSenderRoleDefinition 'Microsoft.Authorization/roleDefinit
 }
 module serviceBusDataSenderRoleAssignment 'roleAssignment.bicep' = {
   name: 'serviceBusDataSenderRoleAssignment'
-  scope: resourceGroup(integrationResourceGroupName)
+  scope: resourceGroup(integrationEnvironment.resourceGroupName)
   params: {
     principalId: hitsProcessorJob.identity.principalId
     roleDefinitionId: serviceBusDataSenderRoleDefinition.id
